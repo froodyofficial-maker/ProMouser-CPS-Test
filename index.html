@@ -1,0 +1,4886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProMouser - Clicks Per Second Test</title>
+
+<style>
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+html,
+body {
+    background: #000000;
+    color: white;
+    min-height: 100%;
+}
+
+body {
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+header {
+    height: 78px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0 35px;
+
+    background: #000000;
+
+    border-bottom: 1px solid rgba(255,30,30,.45);
+
+    box-shadow:
+        0 0 25px rgba(255,0,0,.08);
+
+    position: relative;
+    z-index: 2;
+}
+
+.logo {
+    font-size: 29px;
+    font-weight: 900;
+    font-style: italic;
+    letter-spacing: -1px;
+
+    text-shadow:
+        0 0 10px rgba(255,0,0,.25);
+}
+
+.logoWhite {
+    color: white;
+}
+
+.logoRed {
+    color: #ff1717;
+
+    text-shadow:
+        0 0 8px #ff1717,
+        0 0 20px rgba(255,0,0,.5);
+}
+
+.headerButton {
+    border: 1px solid #631414;
+
+    background: #080808;
+
+    color: white;
+
+    padding: 11px 17px;
+
+    border-radius: 8px;
+
+    cursor: pointer;
+
+    transition: .2s;
+
+    font-weight: bold;
+}
+
+.headerButton:hover {
+    border-color: #ff2020;
+
+    background: #150505;
+
+    box-shadow:
+        0 0 18px rgba(255,0,0,.3);
+}
+
+
+/* =========================================================
+   MAIN
+========================================================= */
+
+.container {
+    width: min(900px, 94%);
+
+    margin: auto;
+
+    padding: 40px 0 60px;
+
+    position: relative;
+
+    z-index: 1;
+}
+
+.title {
+    text-align: center;
+
+    margin-bottom: 32px;
+}
+
+.title h1 {
+    font-size: 46px;
+
+    font-weight: 950;
+
+    font-style: italic;
+
+    letter-spacing: 3px;
+
+    text-shadow:
+        0 0 10px rgba(255,0,0,.5),
+        0 0 30px rgba(255,0,0,.25);
+}
+
+.title h1 span {
+    color: #ff1616;
+}
+
+.title p {
+    color: #ff1919;
+
+    margin-top: 8px;
+
+    letter-spacing: 5px;
+
+    font-weight: bold;
+
+    text-shadow:
+        0 0 10px rgba(255,0,0,.5);
+}
+
+
+/* =========================================================
+   STATS
+========================================================= */
+
+.stats {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap: 14px;
+}
+
+.stat {
+    position: relative;
+
+    background: #050505;
+
+    border: 1px solid #481313;
+
+    border-radius: 12px;
+
+    padding: 18px;
+
+    text-align: center;
+
+    transition: .2s;
+}
+
+.stat.clickable {
+    cursor: pointer;
+}
+
+.stat.clickable:hover {
+    border-color: #ff1717;
+
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 0 20px rgba(255,0,0,.16);
+}
+
+.stat::before {
+    content: "";
+
+    position: absolute;
+
+    top: -1px;
+
+    left: 15%;
+    right: 15%;
+
+    height: 1px;
+
+    background: #ff1616;
+
+    box-shadow:
+        0 0 10px #ff1616;
+}
+
+.statLabel {
+    color: #847979;
+
+    font-size: 11px;
+
+    text-transform: uppercase;
+
+    letter-spacing: 2px;
+}
+
+.statHint {
+    color: #5e5555;
+
+    font-size: 9px;
+
+    margin-top: 5px;
+
+    letter-spacing: 1px;
+}
+
+.statValue {
+    margin-top: 8px;
+
+    font-size: 28px;
+
+    font-weight: 900;
+
+    color: white;
+}
+
+
+/* =========================================================
+   CPS DISPLAY
+========================================================= */
+
+.cpsBox {
+    text-align: center;
+
+    margin: 30px 0 18px;
+
+    min-height: 125px;
+}
+
+.cpsStatus {
+    color: #ff2424;
+
+    font-size: 13px;
+
+    font-weight: bold;
+
+    letter-spacing: 5px;
+
+    margin-bottom: 4px;
+
+    text-shadow:
+        0 0 10px rgba(255,0,0,.6);
+}
+
+.cpsNumber {
+    font-size: 88px;
+
+    line-height: 1;
+
+    font-weight: 950;
+
+    font-style: italic;
+
+    color: white;
+
+    text-shadow:
+        0 0 8px #ff2020,
+        0 0 25px rgba(255,0,0,.7),
+        0 0 55px rgba(255,0,0,.3);
+
+    transition: .15s;
+}
+
+.cpsLabel {
+    margin-top: 8px;
+
+    color: #8d8181;
+
+    font-size: 13px;
+
+    letter-spacing: 4px;
+}
+
+
+/* =========================================================
+   REACTION / SPECIAL MESSAGE
+========================================================= */
+
+.reactionMessage {
+    min-height: 28px;
+
+    text-align: center;
+
+    color: #ff2020;
+
+    font-size: 17px;
+
+    font-weight: 900;
+
+    font-style: italic;
+
+    letter-spacing: 1px;
+
+    text-shadow:
+        0 0 10px rgba(255,0,0,.5);
+
+    margin-bottom: 5px;
+
+    opacity: 0;
+
+    transition: .2s;
+}
+
+.reactionMessage.show {
+    opacity: 1;
+}
+
+.specialMessage {
+    min-height: 24px;
+
+    text-align: center;
+
+    color: #ff1717;
+
+    font-size: 18px;
+
+    font-weight: 900;
+
+    letter-spacing: 2px;
+
+    margin-top: 10px;
+
+    opacity: 0;
+}
+
+.specialMessage.show {
+    opacity: 1;
+}
+
+
+/* =========================================================
+   AUTCLICKER RESULT
+========================================================= */
+
+.cheaterMessage {
+    display: none;
+
+    text-align: center;
+
+    padding: 18px;
+
+    margin-bottom: 20px;
+
+    border: 2px solid #ff1111;
+
+    border-radius: 12px;
+
+    background: #080000;
+
+    box-shadow:
+        0 0 30px rgba(255,0,0,.25);
+}
+
+.cheaterMessage.show {
+    display: block;
+}
+
+.cheaterMessage h2 {
+    color: #ff1111;
+
+    font-size: 48px;
+
+    font-weight: 1000;
+
+    font-style: italic;
+
+    text-shadow:
+        0 0 10px #ff1111,
+        0 0 30px rgba(255,0,0,.7);
+}
+
+.cheaterMessage p {
+    color: #9b7d7d;
+
+    margin-top: 7px;
+
+    font-size: 12px;
+
+    letter-spacing: 2px;
+}
+
+
+/* =========================================================
+   CPS BAR
+========================================================= */
+
+.barContainer {
+    height: 13px;
+
+    background: #050505;
+
+    border: 1px solid #421313;
+
+    border-radius: 20px;
+
+    overflow: hidden;
+
+    margin: 20px 0 25px;
+}
+
+.bar {
+    height: 100%;
+
+    width: 0%;
+
+    background:
+        linear-gradient(
+            90deg,
+            #8c0808,
+            #ff1717,
+            #ff6868
+        );
+
+    border-radius: 20px;
+
+    box-shadow:
+        0 0 8px #ff1111,
+        0 0 20px rgba(255,0,0,.7);
+
+    transition: width .1s linear;
+}
+
+
+/* =========================================================
+   CLICK AREA
+========================================================= */
+
+.clickArea {
+    height: 300px;
+
+    border-radius: 17px;
+
+    border: 2px solid #601414;
+
+    background:
+        radial-gradient(
+            circle at center,
+            rgba(90,8,8,.25),
+            #050505 70%
+        );
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    cursor: pointer;
+
+    user-select: none;
+
+    position: relative;
+
+    overflow: hidden;
+
+    transition:
+        transform .1s,
+        border-color .2s,
+        box-shadow .2s;
+
+    box-shadow:
+        inset 0 0 60px rgba(255,0,0,.04),
+        0 0 25px rgba(255,0,0,.06);
+}
+
+.clickArea::before {
+    content: "";
+
+    position: absolute;
+
+    width: 200px;
+    height: 200px;
+
+    border: 1px solid rgba(255,20,20,.25);
+
+    border-radius: 50%;
+
+    box-shadow:
+        0 0 30px rgba(255,0,0,.1);
+
+    pointer-events: none;
+}
+
+.clickArea:hover {
+    border-color: #ff1919;
+
+    box-shadow:
+        inset 0 0 80px rgba(255,0,0,.07),
+        0 0 35px rgba(255,0,0,.22);
+}
+
+.clickArea:active {
+    transform: scale(.992);
+}
+
+.clickArea.cooldown {
+    cursor: not-allowed;
+
+    border-color: #391010;
+
+    opacity: .7;
+}
+
+.clickText {
+    text-align: center;
+
+    position: relative;
+
+    z-index: 1;
+}
+
+.clickText h2 {
+    font-size: 34px;
+
+    font-style: italic;
+
+    font-weight: 950;
+
+    text-shadow:
+        0 0 12px rgba(255,0,0,.6);
+}
+
+.clickText p {
+    margin-top: 10px;
+
+    color: #766b6b;
+
+    letter-spacing: 2px;
+}
+
+
+/* =========================================================
+   TRACKER MODE CLICK SQUARE
+========================================================= */
+
+.clickArea.trackerMode {
+    height: 300px;
+
+    background: #020202;
+
+    border-color: #651313;
+}
+
+.trackerSquare {
+    display: none;
+
+    position: absolute;
+
+    width: 105px;
+    height: 105px;
+
+    background:
+        radial-gradient(
+            circle,
+            #3a0808,
+            #100303
+        );
+
+    border: 2px solid #ff1818;
+
+    border-radius: 10px;
+
+    box-shadow:
+        0 0 15px rgba(255,0,0,.5),
+        inset 0 0 25px rgba(255,0,0,.12);
+
+    align-items: center;
+
+    justify-content: center;
+
+    cursor: pointer;
+
+    z-index: 5;
+
+    transition:
+        left .08s linear,
+        top .08s linear;
+}
+
+.trackerSquare.active {
+    display: flex;
+}
+
+.trackerSquare span {
+    color: white;
+
+    font-size: 11px;
+
+    font-weight: 900;
+
+    letter-spacing: 1px;
+
+    pointer-events: none;
+}
+
+.clickArea.trackerMode .clickText {
+    display: none;
+}
+
+
+/* =========================================================
+   COOLDOWN
+========================================================= */
+
+.cooldownMessage {
+    text-align: center;
+
+    color: #ff2525;
+
+    font-size: 12px;
+
+    letter-spacing: 3px;
+
+    font-weight: bold;
+
+    margin-top: 14px;
+
+    min-height: 18px;
+
+    opacity: 0;
+
+    transition: .2s;
+}
+
+.cooldownMessage.show {
+    opacity: 1;
+}
+
+
+/* =========================================================
+   TIME BUTTONS
+========================================================= */
+
+.times {
+    display: flex;
+
+    justify-content: center;
+
+    gap: 9px;
+
+    margin-top: 18px;
+
+    flex-wrap: wrap;
+}
+
+.timeBtn {
+    min-width: 85px;
+
+    padding: 11px 18px;
+
+    background: #080808;
+
+    color: #9e9292;
+
+    border: 1px solid #3c1414;
+
+    border-radius: 8px;
+
+    cursor: pointer;
+
+    font-weight: bold;
+
+    transition: .2s;
+}
+
+.timeBtn:hover {
+    color: white;
+
+    border-color: #b61919;
+}
+
+.timeBtn.active {
+    color: white;
+
+    border-color: #ff1717;
+
+    background: #1b0505;
+
+    box-shadow:
+        0 0 15px rgba(255,0,0,.25);
+}
+
+
+/* =========================================================
+   PAGE SYSTEM
+========================================================= */
+
+.page {
+    display: none;
+}
+
+.page.active {
+    display: block;
+}
+
+
+/* =========================================================
+   SECONDARY PAGE
+========================================================= */
+
+.secondaryPage {
+    width: min(900px, 94%);
+
+    margin: auto;
+
+    padding: 40px 0 60px;
+
+    position: relative;
+
+    z-index: 1;
+}
+
+.pageHeader {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    margin-bottom: 30px;
+}
+
+.pageHeader h1 {
+    font-size: 35px;
+
+    font-style: italic;
+
+    font-weight: 950;
+}
+
+.pageHeader h1 span {
+    color: #ff1717;
+}
+
+.backButton {
+    padding: 10px 17px;
+
+    background: #080808;
+
+    color: white;
+
+    border: 1px solid #551313;
+
+    border-radius: 8px;
+
+    cursor: pointer;
+
+    font-weight: bold;
+}
+
+.backButton:hover {
+    border-color: #ff1717;
+
+    box-shadow:
+        0 0 15px rgba(255,0,0,.2);
+}
+
+
+/* =========================================================
+   HISTORY
+========================================================= */
+
+.historyStats {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap: 14px;
+
+    margin-bottom: 20px;
+}
+
+.historyStat {
+    background: #050505;
+
+    border: 1px solid #451313;
+
+    border-radius: 10px;
+
+    padding: 18px;
+
+    text-align: center;
+}
+
+.historyStatTitle {
+    color: #827676;
+
+    font-size: 11px;
+
+    letter-spacing: 2px;
+
+    text-transform: uppercase;
+}
+
+.historyStatValue {
+    font-size: 26px;
+
+    font-weight: 900;
+
+    margin-top: 7px;
+}
+
+
+/* =========================================================
+   PERFORMANCE
+========================================================= */
+
+.chartBox {
+    background: #030303;
+
+    border: 1px solid #481313;
+
+    border-radius: 14px;
+
+    padding: 20px;
+
+    margin-bottom: 20px;
+}
+
+.chartTitle {
+    color: #ff2020;
+
+    font-size: 13px;
+
+    letter-spacing: 3px;
+
+    font-weight: bold;
+
+    margin-bottom: 15px;
+}
+
+canvas {
+    width: 100%;
+
+    height: 300px;
+
+    display: block;
+}
+
+
+/* =========================================================
+   HISTORY LIST
+========================================================= */
+
+.historyList {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 8px;
+
+    margin-top: 25px;
+}
+
+.historyRow {
+    display: grid;
+
+    grid-template-columns:
+        70px 1fr 150px;
+
+    align-items: center;
+
+    padding: 14px 16px;
+
+    background: #080808;
+
+    border: 1px solid #301212;
+
+    border-radius: 8px;
+
+    transition: .15s;
+}
+
+.historyRow:hover {
+    border-color: #661616;
+}
+
+.historyNumber {
+    color: #706666;
+
+    font-weight: bold;
+}
+
+.historyTime {
+    color: #958989;
+
+    font-size: 13px;
+}
+
+.historyScore {
+    text-align: right;
+
+    color: #ff2929;
+
+    font-size: 18px;
+
+    font-weight: 900;
+
+    text-shadow:
+        0 0 8px rgba(255,0,0,.4);
+}
+
+.emptyHistory {
+    text-align: center;
+
+    padding: 50px 20px;
+
+    color: #716868;
+}
+
+
+/* =========================================================
+   OPTIONS
+========================================================= */
+
+.optionSection {
+    margin-bottom: 30px;
+}
+
+.optionSectionTitle {
+    color: #ff2424;
+
+    font-size: 13px;
+
+    font-weight: bold;
+
+    letter-spacing: 3px;
+
+    margin-bottom: 15px;
+}
+
+
+/* =========================================================
+   MOUSE OPTIONS
+========================================================= */
+
+.mouseOptions {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap: 12px;
+}
+
+.mouseOption {
+    background: #080808;
+
+    border: 1px solid #411313;
+
+    border-radius: 12px;
+
+    padding: 22px 15px;
+
+    cursor: pointer;
+
+    text-align: center;
+
+    transition: .2s;
+}
+
+.mouseOption:hover {
+    border-color: #b61919;
+
+    transform: translateY(-2px);
+}
+
+.mouseOption.selected {
+    border-color: #ff1717;
+
+    background: #150505;
+
+    box-shadow:
+        0 0 22px rgba(255,0,0,.2);
+}
+
+.mouseIcon {
+    width: 48px;
+
+    height: 65px;
+
+    margin: 0 auto 14px;
+
+    border: 2px solid #857575;
+
+    border-radius: 22px;
+
+    position: relative;
+
+    transition: .2s;
+}
+
+.mouseOption.selected .mouseIcon {
+    border-color: #ff1b1b;
+
+    box-shadow:
+        0 0 12px rgba(255,0,0,.5);
+}
+
+.mouseIcon::before {
+    content: "";
+
+    position: absolute;
+
+    top: 0;
+    left: 50%;
+
+    transform: translateX(-50%);
+
+    width: 2px;
+
+    height: 27px;
+
+    background: #857575;
+}
+
+.mouseOption.selected .mouseIcon::before {
+    background: #ff1b1b;
+}
+
+.mouseButton {
+    position: absolute;
+
+    top: 7px;
+
+    width: 17px;
+
+    height: 15px;
+
+    border: 1px solid #777;
+
+    border-radius: 6px;
+}
+
+.mouseButton.left {
+    left: 5px;
+}
+
+.mouseButton.right {
+    right: 5px;
+}
+
+.mouseOption.selected .mouseButton {
+    border-color: #ff1b1b;
+}
+
+.mouseOption.selected .mouseButton.active {
+    background: #ff1717;
+
+    box-shadow:
+        0 0 8px #ff1717;
+}
+
+.mouseOption h3 {
+    font-size: 14px;
+
+    margin-bottom: 5px;
+}
+
+.mouseOption p {
+    color: #756b6b;
+
+    font-size: 10px;
+
+    letter-spacing: 1px;
+}
+
+
+/* =========================================================
+   CUSTOM TIME
+========================================================= */
+
+.customTimeBox {
+    background: #050505;
+
+    border: 1px solid #421313;
+
+    border-radius: 12px;
+
+    padding: 20px;
+}
+
+.customTimeBox label {
+    display: block;
+
+    color: #9a8d8d;
+
+    font-size: 12px;
+
+    margin-bottom: 8px;
+}
+
+.customTimeInput {
+    width: 100%;
+
+    padding: 13px;
+
+    background: #000000;
+
+    border: 1px solid #451313;
+
+    border-radius: 8px;
+
+    color: white;
+
+    outline: none;
+}
+
+.customTimeInput:focus {
+    border-color: #ff1717;
+
+    box-shadow:
+        0 0 12px rgba(255,0,0,.15);
+}
+
+.customTimeDisclaimer {
+    color: #655b5b;
+
+    font-size: 10px;
+
+    margin-top: 7px;
+
+    letter-spacing: .5px;
+}
+
+.applyTimeButton {
+    width: 100%;
+
+    margin-top: 10px;
+
+    padding: 12px;
+
+    background: #df1010;
+
+    border: none;
+
+    color: white;
+
+    border-radius: 8px;
+
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+.applyTimeButton:hover {
+    background: #ff1717;
+
+    box-shadow:
+        0 0 18px rgba(255,0,0,.3);
+}
+
+
+/* =========================================================
+   TOGGLES
+========================================================= */
+
+.toggleRow {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    background: #050505;
+
+    border: 1px solid #421313;
+
+    border-radius: 12px;
+
+    padding: 17px 18px;
+
+    margin-bottom: 12px;
+}
+
+.toggleText h3 {
+    font-size: 14px;
+
+    margin-bottom: 5px;
+}
+
+.toggleText p {
+    color: #6f6565;
+
+    font-size: 10px;
+
+    letter-spacing: .7px;
+}
+
+.toggle {
+    position: relative;
+
+    width: 50px;
+
+    height: 26px;
+
+    flex-shrink: 0;
+}
+
+.toggle input {
+    display: none;
+}
+
+.toggleSlider {
+    position: absolute;
+
+    inset: 0;
+
+    background: #191919;
+
+    border: 1px solid #4a1919;
+
+    border-radius: 30px;
+
+    cursor: pointer;
+
+    transition: .2s;
+}
+
+.toggleSlider::before {
+    content: "";
+
+    position: absolute;
+
+    width: 18px;
+    height: 18px;
+
+    left: 3px;
+    top: 3px;
+
+    background: #777;
+
+    border-radius: 50%;
+
+    transition: .2s;
+}
+
+.toggle input:checked + .toggleSlider {
+    background: #390808;
+
+    border-color: #ff1717;
+
+    box-shadow:
+        0 0 12px rgba(255,0,0,.3);
+}
+
+.toggle input:checked + .toggleSlider::before {
+    transform: translateX(24px);
+
+    background: #ff1717;
+
+    box-shadow:
+        0 0 8px #ff1717;
+}
+
+
+/* =========================================================
+   TRACKER DIFFICULTY
+========================================================= */
+
+.trackerDifficulty {
+    display: none;
+
+    background: #050505;
+
+    border: 1px solid #421313;
+
+    border-radius: 12px;
+
+    padding: 20px;
+
+    margin-top: 12px;
+}
+
+.trackerDifficulty.show {
+    display: block;
+}
+
+.difficultyHeader {
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    margin-bottom: 12px;
+}
+
+.difficultyHeader span:first-child {
+    color: #9a8d8d;
+
+    font-size: 12px;
+
+    letter-spacing: 1px;
+}
+
+.difficultyValue {
+    color: #ff2020;
+
+    font-size: 20px;
+
+    font-weight: 900;
+}
+
+.difficultySlider {
+    width: 100%;
+
+    accent-color: #ff1717;
+
+    cursor: pointer;
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media(max-width:600px) {
+
+    header {
+        padding: 0 18px;
+    }
+
+    .logo {
+        font-size: 23px;
+    }
+
+    .title h1 {
+        font-size: 31px;
+    }
+
+    .stats {
+        grid-template-columns: 1fr;
+    }
+
+    .cpsNumber {
+        font-size: 65px;
+    }
+
+    .clickArea {
+        height: 240px;
+    }
+
+    .mouseOptions {
+        grid-template-columns: 1fr;
+    }
+
+    .historyStats {
+        grid-template-columns: 1fr;
+    }
+
+    .pageHeader h1 {
+        font-size: 27px;
+    }
+
+    .historyRow {
+        grid-template-columns:
+            55px 1fr 110px;
+    }
+
+    .historyScore {
+        font-size: 15px;
+    }
+
+    .cheaterMessage h2 {
+        font-size: 35px;
+    }
+
+}
+
+
+/* =========================================================
+   NEW FEATURES — DOES NOT ALTER ORIGINAL PRO MOUSER CSS
+========================================================= */
+
+.uiOptions{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:12px;
+}
+
+.uiOption{
+    background:#050505;
+    border:1px solid #481313;
+    border-radius:12px;
+    padding:16px;
+    cursor:pointer;
+    transition:.2s;
+}
+
+.uiOption:hover{
+    transform:translateY(-2px);
+    border-color:#ff1717;
+    box-shadow:0 0 18px rgba(255,0,0,.22);
+}
+
+.uiOption.selected{
+    border-color:#ff1717;
+    box-shadow:0 0 18px rgba(255,0,0,.25);
+}
+
+.uiOption h3{
+    margin:10px 0 4px;
+    font-size:13px;
+}
+
+.uiOption p{
+    margin:0;
+    color:#756b6b;
+    font-size:10px;
+}
+
+.uiPreview{
+    height:82px;
+    border-radius:9px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:900;
+    font-style:italic;
+    letter-spacing:1px;
+}
+
+.defaultPreview{
+    background:#050505;
+    color:#ff1717;
+    border:1px solid #481313;
+    box-shadow:inset 0 0 25px rgba(255,0,0,.12),0 0 16px rgba(255,0,0,.15);
+}
+
+.neonPreview{
+    background:#010609;
+    color:#00e5ff;
+    border:1px solid #07515e;
+    box-shadow:inset 0 0 28px rgba(0,229,255,.14),0 0 18px rgba(0,229,255,.24);
+    font-family:"Trebuchet MS",Arial,sans-serif;
+}
+
+.stopButton{
+    display:none;
+    margin:13px auto 0;
+    padding:10px 17px;
+    background:#050505;
+    color:#fff;
+    border:1px solid #481313;
+    border-radius:8px;
+    font-weight:800;
+    cursor:pointer;
+    transition:.2s;
+}
+
+.stopButton:hover{
+    border-color:#ff1717;
+    box-shadow:0 0 16px rgba(255,0,0,.25);
+}
+
+/* The ONLY click/press animation: the CPS click box. */
+.clickArea.pmClickFlash{
+    animation:pmClickFlash .11s ease-out;
+}
+
+@keyframes pmClickFlash{
+    0%{transform:scale(1)}
+    50%{transform:scale(.985)}
+    100%{transform:scale(1)}
+}
+
+/* ---------------------------------------------------------
+   Neon Pulse — fully separate accent system.
+   Default ProMouser is NOT modified by these selectors.
+--------------------------------------------------------- */
+
+body.neonPulse{
+    --uiAccent:#00e5ff;
+    --uiBorder:#07515e;
+    --uiPanel:#050d11;
+    --uiBackground:#010609;
+    --uiGlow:rgba(0,229,255,.30);
+    background:var(--uiBackground)!important;
+    font-family:"Trebuchet MS",Arial,sans-serif;
+}
+
+body.neonPulse header{
+    border-bottom-color:var(--uiBorder)!important;
+    box-shadow:0 0 25px var(--uiGlow)!important;
+}
+
+body.neonPulse .logoRed,
+body.neonPulse .title h1 span,
+body.neonPulse .title p,
+body.neonPulse .cpsStatus,
+body.neonPulse .reactionMessage,
+body.neonPulse .specialMessage,
+body.neonPulse .chartTitle,
+body.neonPulse .optionSectionTitle,
+body.neonPulse .pageHeader h1 span,
+body.neonPulse .statValue,
+body.neonPulse .historyStatValue,
+body.neonPulse .cpsNumber,
+body.neonPulse .difficultyValue,
+body.neonPulse .cooldownMessage,
+body.neonPulse .historyScore{
+    color:var(--uiAccent)!important;
+    text-shadow:0 0 8px var(--uiAccent),0 0 22px var(--uiGlow);
+}
+
+body.neonPulse .headerButton,
+body.neonPulse .backButton,
+body.neonPulse .stat,
+body.neonPulse .historyStat,
+body.neonPulse .chartBox,
+body.neonPulse .customTimeBox,
+body.neonPulse .toggleRow,
+body.neonPulse .mouseOption,
+body.neonPulse .clickArea,
+body.neonPulse .uiOption{
+    background:var(--uiPanel)!important;
+    border-color:var(--uiBorder)!important;
+}
+
+body.neonPulse .clickArea{
+    box-shadow:inset 0 0 70px var(--uiGlow),0 0 25px var(--uiGlow)!important;
+}
+
+body.neonPulse .clickArea:hover,
+body.neonPulse .stat.clickable:hover,
+body.neonPulse .headerButton:hover,
+body.neonPulse .backButton:hover,
+body.neonPulse .mouseOption:hover,
+body.neonPulse .toggleRow:hover,
+body.neonPulse .uiOption:hover{
+    border-color:var(--uiAccent)!important;
+    box-shadow:0 0 10px var(--uiAccent),0 0 28px var(--uiGlow)!important;
+}
+
+body.neonPulse .timeBtn{
+    background:var(--uiPanel)!important;
+    border-color:var(--uiBorder)!important;
+}
+
+body.neonPulse .timeBtn.active{
+    color:var(--uiAccent)!important;
+    border-color:var(--uiAccent)!important;
+    box-shadow:0 0 10px var(--uiAccent),0 0 24px var(--uiGlow)!important;
+}
+
+body.neonPulse .barContainer{
+    background:var(--uiBackground)!important;
+    border-color:var(--uiBorder)!important;
+}
+
+body.neonPulse .bar{
+    background:linear-gradient(90deg,var(--uiAccent),var(--uiAccent))!important;
+    box-shadow:0 0 8px var(--uiAccent),0 0 20px var(--uiGlow)!important;
+}
+
+body.neonPulse .trackerSquare{
+    background:var(--uiPanel)!important;
+    border-color:var(--uiAccent)!important;
+    box-shadow:0 0 15px var(--uiAccent),0 0 28px var(--uiGlow),inset 0 0 25px var(--uiGlow)!important;
+}
+
+body.neonPulse .mouseOption.selected{
+    border-color:var(--uiAccent)!important;
+    box-shadow:0 0 10px var(--uiAccent),0 0 25px var(--uiGlow)!important;
+}
+
+body.neonPulse .mouseOption.selected .mouseIcon,
+body.neonPulse .mouseOption.selected .mouseButton{
+    border-color:var(--uiAccent)!important;
+}
+
+body.neonPulse .mouseOption.selected .mouseButton.active{
+    background:var(--uiAccent)!important;
+    box-shadow:0 0 8px var(--uiAccent)!important;
+}
+
+body.neonPulse .toggle input:checked + .toggleSlider{
+    background:var(--uiPanel)!important;
+    border-color:var(--uiAccent)!important;
+}
+
+body.neonPulse .toggle input:checked + .toggleSlider:before{
+    background:var(--uiAccent)!important;
+    box-shadow:0 0 9px var(--uiAccent)!important;
+}
+
+body.neonPulse .applyTimeButton,
+body.neonPulse .stopButton{
+    border-color:var(--uiBorder)!important;
+}
+
+body.neonPulse .applyTimeButton{
+    background:var(--uiAccent)!important;
+    color:#fff!important;
+    box-shadow:0 0 12px var(--uiGlow)!important;
+}
+
+body.neonPulse .stopButton:hover{
+    border-color:var(--uiAccent)!important;
+    box-shadow:0 0 10px var(--uiAccent),0 0 24px var(--uiGlow)!important;
+}
+
+body.neonPulse .cheaterMessage{
+    border-color:var(--uiAccent)!important;
+    box-shadow:0 0 30px var(--uiGlow)!important;
+}
+
+body.neonPulse .cheaterMessage h2{
+    color:var(--uiAccent)!important;
+    text-shadow:0 0 10px var(--uiAccent),0 0 30px var(--uiGlow)!important;
+}
+
+@media(max-width:600px){
+    .uiOptions{grid-template-columns:1fr}
+}
+
+
+/* =========================================================
+   NEON PULSE — REMOVE ALL REMAINING RED ACCENTS
+========================================================= */
+
+body.neonPulse .logoRed,
+body.neonPulse .title h1 span,
+body.neonPulse .title p,
+body.neonPulse .optionSectionTitle,
+body.neonPulse .pageHeader h1 span,
+body.neonPulse .cpsStatus,
+body.neonPulse .cpsNumber,
+body.neonPulse .reactionMessage,
+body.neonPulse .specialMessage,
+body.neonPulse .historyScore,
+body.neonPulse .historyStatValue,
+body.neonPulse .difficultyValue{
+    color:#00e5ff!important;
+    text-shadow:0 0 8px #00e5ff,0 0 20px rgba(0,229,255,.35)!important;
+}
+
+body.neonPulse header,
+body.neonPulse .headerButton,
+body.neonPulse .backButton,
+body.neonPulse .stat,
+body.neonPulse .cpsBox,
+body.neonPulse .barContainer,
+body.neonPulse .clickArea,
+body.neonPulse .timeBtn,
+body.neonPulse .mouseOption,
+body.neonPulse .customTimeBox,
+body.neonPulse .toggleRow,
+body.neonPulse .trackerDifficulty,
+body.neonPulse .chartBox,
+body.neonPulse .historyStat,
+body.neonPulse .uiOption,
+body.neonPulse .stopButton,
+body.neonPulse input[type="text"],
+body.neonPulse input[type="number"]{
+    border-color:#07515e!important;
+}
+
+body.neonPulse .headerButton:hover,
+body.neonPulse .backButton:hover,
+body.neonPulse .stat.clickable:hover,
+body.neonPulse .mouseOption:hover,
+body.neonPulse .uiOption:hover,
+body.neonPulse .timeBtn:hover,
+body.neonPulse .stopButton:hover{
+    border-color:#00e5ff!important;
+    box-shadow:0 0 10px #00e5ff,0 0 24px rgba(0,229,255,.28)!important;
+}
+
+body.neonPulse .timeBtn.active,
+body.neonPulse .mouseOption.selected,
+body.neonPulse .uiOption.selected{
+    color:#00e5ff!important;
+    border-color:#00e5ff!important;
+    box-shadow:0 0 10px #00e5ff,0 0 24px rgba(0,229,255,.28)!important;
+}
+
+body.neonPulse .bar{
+    background:#00e5ff!important;
+    box-shadow:0 0 8px #00e5ff,0 0 20px rgba(0,229,255,.35)!important;
+}
+
+body.neonPulse .applyTimeButton{
+    background:#00e5ff!important;
+    border-color:#00e5ff!important;
+    color:#020202!important;
+}
+
+body.neonPulse .toggle input:checked + .toggleSlider{
+    border-color:#00e5ff!important;
+    background:#050d11!important;
+}
+
+body.neonPulse .toggle input:checked + .toggleSlider:before{
+    background:#00e5ff!important;
+    box-shadow:0 0 10px #00e5ff!important;
+}
+
+body.neonPulse .difficultySlider{
+    accent-color:#00e5ff!important;
+}
+
+body.neonPulse .difficultySlider::-webkit-slider-thumb{
+    background:#00e5ff!important;
+    border-color:#00e5ff!important;
+    box-shadow:0 0 10px #00e5ff!important;
+}
+
+body.neonPulse .difficultySlider::-moz-range-thumb{
+    background:#00e5ff!important;
+    border-color:#00e5ff!important;
+    box-shadow:0 0 10px #00e5ff!important;
+}
+
+body.neonPulse .customTimeBox input{
+    border-color:#07515e!important;
+    color:#00e5ff!important;
+    box-shadow:none!important;
+}
+
+body.neonPulse .clickArea{
+    border-color:#07515e!important;
+    box-shadow:inset 0 0 70px rgba(0,229,255,.14),0 0 25px rgba(0,229,255,.25)!important;
+}
+
+body.neonPulse .clickArea.pmClickFlash{
+    box-shadow:inset 0 0 85px rgba(0,229,255,.28),0 0 35px rgba(0,229,255,.42)!important;
+}
+
+body.neonPulse .trackerSquare{
+    border-color:#00e5ff!important;
+    background:#050d11!important;
+    box-shadow:0 0 15px #00e5ff,0 0 28px rgba(0,229,255,.30)!important;
+}
+
+</style>
+</head>
+
+
+<body>
+
+
+<!-- =========================================================
+     HEADER
+========================================================= -->
+
+<header>
+
+    <div class="logo">
+        <span class="logoWhite">Pro</span><span class="logoRed">Mouser</span>
+    </div>
+
+    <button
+        class="headerButton"
+        onclick="openOptions()"
+    >
+        ⚙ OPTIONS
+    </button>
+
+</header>
+
+
+<!-- =========================================================
+     MAIN TEST PAGE
+========================================================= -->
+
+<div
+    class="page active"
+    id="testPage"
+>
+
+<div class="container">
+
+
+    <div class="title">
+
+        <h1>
+            CLICKS PER SECOND <span>TEST</span>
+        </h1>
+
+        <p>
+            PROMOUSER
+        </p>
+
+    </div>
+
+
+    <!-- STATS -->
+
+    <div class="stats">
+
+
+        <!-- TIME -->
+
+        <div
+            class="stat clickable"
+            onclick="openOptionsAndFocusTime()"
+            title="Click to change test time"
+        >
+
+            <div class="statLabel">
+                Time
+            </div>
+
+            <div
+                class="statValue"
+                id="time"
+            >
+                1.00
+            </div>
+
+            <div class="statHint">
+                CLICK TO CUSTOMIZE
+            </div>
+
+        </div>
+
+
+        <!-- CLICKS -->
+
+        <div class="stat">
+
+            <div class="statLabel">
+                Clicks
+            </div>
+
+            <div
+                class="statValue"
+                id="clicks"
+            >
+                0
+            </div>
+
+        </div>
+
+
+        <!-- BEST CPS -->
+
+        <div
+            class="stat clickable"
+            onclick="openHistory()"
+            title="View CPS history"
+        >
+
+            <div class="statLabel">
+                Best CPS
+            </div>
+
+            <div
+                class="statValue"
+                id="highScore"
+            >
+                0.00
+            </div>
+
+            <div class="statHint">
+                CLICK TO VIEW HISTORY
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- CPS -->
+
+    <div class="cpsBox">
+
+        <div
+            class="cpsStatus"
+            id="cpsStatus"
+        >
+            LIVE CPS
+        </div>
+
+        <div
+            class="cpsNumber"
+            id="cps"
+        >
+            0.00
+        </div>
+
+        <div class="cpsLabel">
+            CLICKS PER SECOND
+        </div>
+
+    </div>
+
+
+    <!-- REACTION -->
+
+    <div
+        class="reactionMessage"
+        id="reactionMessage"
+    ></div>
+
+
+    <!-- SPECIAL 69.69 -->
+
+    <div
+        class="specialMessage"
+        id="specialMessage"
+    >
+        suveer was here
+    </div>
+
+
+    <!-- AUTCLICKER RESULT -->
+
+    <div
+        class="cheaterMessage"
+        id="cheaterMessage"
+    >
+
+        <h2>
+            YOU SUCK
+        </h2>
+
+        <p>
+            AUTCLICKER DETECTED
+        </p>
+
+    </div>
+
+
+    <!-- BAR -->
+
+    <div class="barContainer">
+
+        <div
+            class="bar"
+            id="cpsBar"
+        ></div>
+
+    </div>
+
+
+    <!-- CLICK AREA -->
+
+    <div
+        class="clickArea"
+        id="clickArea"
+    >
+
+        <div class="clickText">
+
+            <h2 id="clickTitle">
+                CLICK HERE
+            </h2>
+
+            <p id="clickSubtitle">
+                START CLICKING TO BEGIN
+            </p>
+
+        </div>
+
+
+        <!-- TRACKER SQUARE -->
+
+        <div
+            class="trackerSquare"
+            id="trackerSquare"
+        >
+
+            <span>
+                CLICK
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <!-- COOLDOWN -->
+
+    <div
+        class="cooldownMessage"
+        id="cooldownMessage"
+    >
+        COOLDOWN — GET READY...
+    </div>
+
+    <button
+        class="stopButton"
+        id="stopButton"
+        onclick="stopCurrentTest()"
+    >
+        ■ STOP TEST
+    </button>
+
+
+    <!-- PRESET TIMES -->
+
+    <div class="times">
+
+        <button
+            class="timeBtn active"
+            onclick="setTime(1,this)"
+        >
+            1 SEC
+        </button>
+
+        <button
+            class="timeBtn"
+            onclick="setTime(5,this)"
+        >
+            5 SEC
+        </button>
+
+        <button
+            class="timeBtn"
+            onclick="setTime(10,this)"
+        >
+            10 SEC
+        </button>
+
+        <button
+            class="timeBtn"
+            onclick="setTime(30,this)"
+        >
+            30 SEC
+        </button>
+
+        <button
+            class="timeBtn"
+            onclick="setTime(60,this)"
+        >
+            60 SEC
+        </button>
+
+    </div>
+
+
+</div>
+
+</div>
+
+
+<!-- =========================================================
+     HISTORY PAGE
+========================================================= -->
+
+<div
+    class="page"
+    id="historyPage"
+>
+
+<div class="secondaryPage">
+
+    <div class="pageHeader">
+
+        <h1>
+            CPS <span>HISTORY</span>
+        </h1>
+
+        <button
+            class="backButton"
+            onclick="showTestPage()"
+        >
+            ← BACK
+        </button>
+
+    </div>
+
+
+    <div class="historyStats">
+
+        <div class="historyStat">
+
+            <div class="historyStatTitle">
+                Tests
+            </div>
+
+            <div
+                class="historyStatValue"
+                id="totalTests"
+            >
+                0
+            </div>
+
+        </div>
+
+
+        <div class="historyStat">
+
+            <div class="historyStatTitle">
+                Average CPS
+            </div>
+
+            <div
+                class="historyStatValue"
+                id="averageCPS"
+            >
+                0.00
+            </div>
+
+        </div>
+
+
+        <div class="historyStat">
+
+            <div class="historyStatTitle">
+                Best CPS
+            </div>
+
+            <div
+                class="historyStatValue"
+                id="historyBest"
+            >
+                0.00
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="chartBox">
+
+        <div class="chartTitle">
+            PERFORMANCE
+        </div>
+
+        <canvas id="cpsChart"></canvas>
+
+
+        <div
+            class="historyList"
+            id="historyList"
+        ></div>
+
+    </div>
+
+</div>
+
+</div>
+
+
+<!-- =========================================================
+     OPTIONS PAGE
+========================================================= -->
+
+<div
+    class="page"
+    id="optionsPage"
+>
+
+<div class="secondaryPage">
+
+    <div class="pageHeader">
+
+        <h1>
+            PROMOUSER <span>OPTIONS</span>
+        </h1>
+
+        <button
+            class="backButton"
+            onclick="showTestPage()"
+        >
+            ← BACK
+        </button>
+
+    </div>
+
+
+    <!-- MOUSE BUTTON -->
+
+    <div class="optionSection">
+
+        <div class="optionSectionTitle">
+            CLICK BUTTON
+        </div>
+
+
+        <div class="mouseOptions">
+
+
+            <div
+                class="mouseOption selected"
+                id="leftOption"
+                onclick="selectMouse('left')"
+            >
+
+                <div class="mouseIcon">
+
+                    <div
+                        class="mouseButton left active"
+                    ></div>
+
+                    <div
+                        class="mouseButton right"
+                    ></div>
+
+                </div>
+
+                <h3>
+                    LEFT CLICK
+                </h3>
+
+                <p>
+                    PRIMARY BUTTON
+                </p>
+
+            </div>
+
+
+            <div
+                class="mouseOption"
+                id="rightOption"
+                onclick="selectMouse('right')"
+            >
+
+                <div class="mouseIcon">
+
+                    <div
+                        class="mouseButton left"
+                    ></div>
+
+                    <div
+                        class="mouseButton right active"
+                    ></div>
+
+                </div>
+
+                <h3>
+                    RIGHT CLICK
+                </h3>
+
+                <p>
+                    SECONDARY BUTTON
+                </p>
+
+            </div>
+
+
+            <div
+                class="mouseOption"
+                id="bothOption"
+                onclick="selectMouse('both')"
+            >
+
+                <div class="mouseIcon">
+
+                    <div
+                        class="mouseButton left active"
+                    ></div>
+
+                    <div
+                        class="mouseButton right active"
+                    ></div>
+
+                </div>
+
+                <h3>
+                    BOTH CLICKS
+                </h3>
+
+                <p>
+                    LEFT + RIGHT
+                </p>
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+
+    <!-- CUSTOM TIME -->
+
+    <div
+        class="optionSection"
+        id="customTimeSection"
+    >
+
+        <div class="optionSectionTitle">
+            CUSTOM TEST TIME
+        </div>
+
+
+        <div class="customTimeBox">
+
+            <label>
+                ENTER TEST TIME IN SECONDS
+            </label>
+
+            <input
+                class="customTimeInput"
+                id="customTimeInput"
+                type="text"
+                inputmode="decimal"
+                placeholder="Example: 7.50"
+                maxlength="8"
+            >
+
+            <div class="customTimeDisclaimer">
+                Only up to two decimals
+            </div>
+
+
+            <button
+                class="applyTimeButton"
+                onclick="applyCustomTime()"
+            >
+                APPLY CUSTOM TIME
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- TRACKER MODE -->
+
+    <div class="optionSection">
+
+        <div class="optionSectionTitle">
+            TRACKER MODE
+        </div>
+
+
+        <div class="toggleRow">
+
+            <div class="toggleText">
+
+                <h3>
+                    Tracker Mode
+                </h3>
+
+                <p>
+                    MOVE THE CLICK TARGET AROUND THE BOX
+                </p>
+
+            </div>
+
+
+            <label class="toggle">
+
+                <input
+                    type="checkbox"
+                    id="trackerToggle"
+                    onchange="toggleTrackerMode()"
+                >
+
+                <span class="toggleSlider"></span>
+
+            </label>
+
+        </div>
+
+
+        <div
+            class="trackerDifficulty"
+            id="trackerDifficulty"
+        >
+
+            <div class="difficultyHeader">
+
+                <span>
+                    MOVEMENT DIFFICULTY
+                </span>
+
+                <span
+                    class="difficultyValue"
+                    id="difficultyValue"
+                >
+                    7
+                </span>
+
+            </div>
+
+
+            <input
+                class="difficultySlider"
+                id="difficultySlider"
+                type="range"
+                min="1"
+                max="20"
+                value="7"
+                oninput="updateDifficulty()"
+            >
+
+        </div>
+
+    </div>
+
+
+
+    <!-- CUSTOMIZATION -->
+
+    <div class="optionSection">
+
+        <div class="optionSectionTitle">
+            CUSTOMIZATION
+        </div>
+
+        <div class="uiOptions">
+
+            <div
+                class="uiOption selected"
+                id="defaultUIOption"
+                onclick="selectUI('default')"
+            >
+                <div class="uiPreview defaultPreview">
+                    ProMouser
+                </div>
+                <h3>PRO MOUSER</h3>
+                <p>ORIGINAL UI</p>
+            </div>
+
+            <div
+                class="uiOption"
+                id="neonUIOption"
+                onclick="selectUI('neon')"
+            >
+                <div class="uiPreview neonPreview">
+                    NEON PULSE
+                </div>
+                <h3>NEON PULSE</h3>
+                <p>CYAN GLOW UI</p>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- REACTIONS -->
+
+    <div class="optionSection">
+
+        <div class="optionSectionTitle">
+            REACTIONS
+        </div>
+
+
+        <div class="toggleRow">
+
+            <div class="toggleText">
+
+                <h3>
+                    Reactions
+                </h3>
+
+                <p>
+                    SHOW A REACTION AFTER YOUR TEST
+                </p>
+
+            </div>
+
+
+            <label class="toggle">
+
+                <input
+                    type="checkbox"
+                    id="reactionsToggle"
+                    checked
+                >
+
+                <span class="toggleSlider"></span>
+
+            </label>
+
+        </div>
+
+    </div>
+
+</div>
+
+</div>
+
+
+<script>
+
+/* =========================================================
+   VARIABLES
+========================================================= */
+
+let testTime = 1;
+
+let timeLeft = 1;
+
+let clicks = 0;
+
+let running = false;
+
+let cooldown = false;
+
+let startTime = 0;
+
+let timerInterval = null;
+
+let cooldownTimer = null;
+
+let selectedMouse = "left";
+
+
+/* =========================================================
+   TRACKER VARIABLES
+========================================================= */
+
+let trackerMode = false;
+
+let trackerDifficulty = 10;
+
+let trackerX = 0;
+
+let trackerY = 0;
+
+
+/* =========================================================
+   CLICK TIMING DATA
+========================================================= */
+
+let clickTimes = [];
+
+let clickIntervals = [];
+
+
+/* =========================================================
+   SCORES
+========================================================= */
+
+let highScore = parseFloat(
+    localStorage.getItem(
+        "promouserHighScore"
+    ) || "0"
+);
+
+
+let history = JSON.parse(
+    localStorage.getItem(
+        "promouserCPSHistory"
+    ) || "[]"
+);
+
+
+/* =========================================================
+   ELEMENTS
+========================================================= */
+
+const clickArea =
+    document.getElementById(
+        "clickArea"
+    );
+
+
+const trackerSquare =
+    document.getElementById(
+        "trackerSquare"
+    );
+
+
+const customTimeInput =
+    document.getElementById(
+        "customTimeInput"
+    );
+
+
+/* =========================================================
+   INITIAL DISPLAY
+========================================================= */
+
+document.getElementById(
+    "highScore"
+).textContent =
+    highScore.toFixed(2);
+
+
+document.getElementById(
+    "time"
+).textContent =
+    testTime.toFixed(2);
+
+
+/* =========================================================
+   PAGE NAVIGATION
+========================================================= */
+
+function hideAllPages() {
+
+    document
+        .querySelectorAll(".page")
+        .forEach(
+            page =>
+                page.classList.remove("active")
+        );
+
+}
+
+
+function showTestPage() {
+
+    hideAllPages();
+
+    document
+        .getElementById("testPage")
+        .classList.add("active");
+
+}
+
+
+function openHistory() {
+
+    if (
+        running ||
+        cooldown
+    ) return;
+
+    renderHistory();
+
+    hideAllPages();
+
+    document
+        .getElementById("historyPage")
+        .classList.add("active");
+
+}
+
+
+function openOptions() {
+
+    if (
+        running ||
+        cooldown
+    ) return;
+
+    hideAllPages();
+
+    document
+        .getElementById("optionsPage")
+        .classList.add("active");
+
+}
+
+
+function openOptionsAndFocusTime() {
+
+    if (
+        running ||
+        cooldown
+    ) return;
+
+    openOptions();
+
+    setTimeout(
+        function() {
+
+            customTimeInput.focus();
+
+        },
+        100
+    );
+
+}
+
+
+/* =========================================================
+   SET TIME
+========================================================= */
+
+function setTime(seconds, button) {
+
+    if (
+        running ||
+        cooldown
+    ) return;
+
+
+    testTime = seconds;
+
+
+    document
+        .querySelectorAll(".timeBtn")
+        .forEach(
+            b =>
+                b.classList.remove("active")
+        );
+
+
+    button.classList.add("active");
+
+
+    resetTest();
+
+}
+
+
+/* =========================================================
+   START TEST
+========================================================= */
+
+function startTest() {
+
+    if (
+        running ||
+        cooldown
+    ) return;
+
+
+    running = true;
+
+    document.getElementById("stopButton").style.display = "block";
+
+
+    clicks = 0;
+
+
+    startTime =
+        performance.now();
+
+
+    timeLeft = testTime;
+
+
+    /*
+        Reset timing detector.
+    */
+
+    clickTimes = [];
+
+    clickIntervals = [];
+
+
+    /*
+        A new test removes the
+        previous final result.
+    */
+
+    document.getElementById(
+        "cps"
+    ).textContent =
+        "0.00";
+
+
+    document.getElementById(
+        "cpsStatus"
+    ).textContent =
+        "LIVE CPS";
+
+
+    document.getElementById(
+        "clicks"
+    ).textContent =
+        "0";
+
+
+    document.getElementById(
+        "clickTitle"
+    ).textContent =
+        "KEEP CLICKING";
+
+
+    document.getElementById(
+        "clickSubtitle"
+    ).textContent =
+        "CLICK AS FAST AS YOU CAN";
+
+
+    /*
+        Remove previous warnings.
+    */
+
+    document.getElementById(
+        "cheaterMessage"
+    ).classList.remove(
+        "show"
+    );
+
+
+    document.getElementById(
+        "reactionMessage"
+    ).classList.remove(
+        "show"
+    );
+
+
+    document.getElementById(
+        "specialMessage"
+    ).classList.remove(
+        "show"
+    );
+
+
+    /*
+        Tracker starts with a random position.
+    */
+
+    if (trackerMode) {
+
+        clickArea.classList.add(
+            "trackerMode"
+        );
+
+        trackerSquare.classList.add(
+            "active"
+        );
+
+        moveTrackerSquare();
+
+    }
+
+
+    timerInterval =
+        setInterval(
+            updateTest,
+            10
+        );
+
+}
+
+
+/* =========================================================
+   UPDATE TEST
+========================================================= */
+
+function updateTest() {
+
+    if (!running) return;
+
+
+    const elapsed =
+        (
+            performance.now() -
+            startTime
+        ) / 1000;
+
+
+    timeLeft =
+        Math.max(
+            testTime - elapsed,
+            0
+        );
+
+
+    document.getElementById(
+        "time"
+    ).textContent =
+        timeLeft.toFixed(2);
+
+
+    const currentCPS =
+        elapsed > 0
+        ? clicks / elapsed
+        : 0;
+
+
+    document.getElementById(
+        "cps"
+    ).textContent =
+        currentCPS.toFixed(2);
+
+
+    const bar =
+        Math.min(
+            currentCPS / 20 * 100,
+            100
+        );
+
+
+    document.getElementById(
+        "cpsBar"
+    ).style.width =
+        bar + "%";
+
+
+    if (
+        elapsed >= testTime
+    ) {
+
+        finishTest();
+
+    }
+
+}
+
+
+/* =========================================================
+   CLICK HANDLER
+========================================================= */
+
+clickArea.addEventListener(
+    "mousedown",
+    function(e) {
+
+        if (cooldown) {
+            e.preventDefault();
+            return;
+        }
+
+        if (trackerMode && running) {
+            const squareRect = trackerSquare.getBoundingClientRect();
+
+            const inside =
+                e.clientX >= squareRect.left &&
+                e.clientX <= squareRect.right &&
+                e.clientY >= squareRect.top &&
+                e.clientY <= squareRect.bottom;
+
+            if (!inside) return;
+        }
+
+        const allowed =
+            selectedMouse === "both" ||
+            (selectedMouse === "left" && e.button === 0) ||
+            (selectedMouse === "right" && e.button === 2);
+
+        if (!allowed) return;
+
+        e.preventDefault();
+
+        if (!running) startTest();
+
+        if (running) registerClick(e);
+    }
+);
+
+
+/* =========================================================
+   TRACKER SQUARE CLICK
+========================================================= */
+
+trackerSquare.addEventListener(
+    "mousedown",
+    function(e) {
+
+        if (!trackerMode || !running || cooldown) return;
+
+        const allowed =
+            selectedMouse === "both" ||
+            (selectedMouse === "left" && e.button === 0) ||
+            (selectedMouse === "right" && e.button === 2);
+
+        if (!allowed) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        registerClick(e);
+    }
+);
+
+
+/* =========================================================
+   REGISTER CLICK
+========================================================= */
+
+function registerClick(e) {
+
+    const now =
+        performance.now();
+
+
+    /*
+        Record interval between clicks.
+    */
+
+    if (
+        clickTimes.length > 0
+    ) {
+
+        const interval =
+            now -
+            clickTimes[
+                clickTimes.length - 1
+            ];
+
+
+        clickIntervals.push(
+            interval
+        );
+
+    }
+
+
+    clickTimes.push(now);
+
+
+    clicks++;
+
+    /*
+        Click animation is tied to the successful CPS click,
+        so the visual effect can never block the test itself.
+    */
+    clickArea.classList.remove("pmClickFlash");
+    void clickArea.offsetWidth;
+    clickArea.classList.add("pmClickFlash");
+
+    document.getElementById(
+        "clicks"
+    ).textContent =
+        clicks;
+
+
+    /*
+        Move target after click.
+    */
+
+    if (
+        trackerMode
+    ) {
+
+        moveTrackerSquare();
+
+    }
+
+}
+
+
+/* =========================================================
+   RIGHT CLICK
+========================================================= */
+
+clickArea.addEventListener(
+    "contextmenu",
+    function(e) {
+
+        if (
+            selectedMouse === "right" ||
+            selectedMouse === "both"
+        ) {
+
+            e.preventDefault();
+
+        }
+
+    }
+);
+
+
+trackerSquare.addEventListener(
+    "contextmenu",
+    function(e) {
+
+        if (
+            selectedMouse === "right" ||
+            selectedMouse === "both"
+        ) {
+
+            e.preventDefault();
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   SMART AUTOCLICKER DETECTION
+========================================================= */
+
+function detectAutoClicker(intervals) {
+
+    /*
+        Not enough data to make
+        a meaningful decision.
+    */
+
+    if (
+        intervals.length < 12
+    ) {
+
+        return false;
+
+    }
+
+
+    /*
+        Remove extreme first/last
+        timing anomalies.
+    */
+
+    const sorted =
+        [...intervals]
+        .sort(
+            (a,b) => a - b
+        );
+
+
+    const trim =
+        Math.floor(
+            sorted.length * 0.05
+        );
+
+
+    const trimmed =
+        sorted.slice(
+            trim,
+            sorted.length - trim
+        );
+
+
+    if (
+        trimmed.length < 8
+    ) {
+
+        return false;
+
+    }
+
+
+    /*
+        Average interval.
+    */
+
+    const average =
+        trimmed.reduce(
+            (a,b) => a + b,
+            0
+        ) / trimmed.length;
+
+
+    if (
+        average <= 0
+    ) {
+
+        return false;
+
+    }
+
+
+    /*
+        Standard deviation.
+    */
+
+    const variance =
+        trimmed.reduce(
+            (sum, value) =>
+                sum +
+                Math.pow(
+                    value - average,
+                    2
+                ),
+            0
+        ) / trimmed.length;
+
+
+    const standardDeviation =
+        Math.sqrt(variance);
+
+
+    const coefficient =
+        standardDeviation /
+        average;
+
+
+    /*
+        Signal 1:
+        Extremely low variation.
+    */
+
+    const extremelyRegular =
+        coefficient < 0.025;
+
+
+    /*
+        Signal 2:
+        How many intervals are
+        almost exactly the same.
+    */
+
+    let nearIdentical = 0;
+
+
+    for (
+        let i = 1;
+        i < trimmed.length;
+        i++
+    ) {
+
+        const difference =
+            Math.abs(
+                trimmed[i] -
+                trimmed[i - 1]
+            );
+
+
+        if (
+            difference <= 1.5
+        ) {
+
+            nearIdentical++;
+
+        }
+
+    }
+
+
+    const identicalRatio =
+        nearIdentical /
+        Math.max(
+            trimmed.length - 1,
+            1
+        );
+
+
+    /*
+        Signal 3:
+        Detect long runs where
+        consecutive intervals are
+        almost identical.
+    */
+
+    let longestRun = 0;
+
+    let currentRun = 0;
+
+
+    for (
+        let i = 1;
+        i < intervals.length;
+        i++
+    ) {
+
+        const difference =
+            Math.abs(
+                intervals[i] -
+                intervals[i - 1]
+            );
+
+
+        if (
+            difference <= 2
+        ) {
+
+            currentRun++;
+
+            longestRun =
+                Math.max(
+                    longestRun,
+                    currentRun
+                );
+
+        }
+
+        else {
+
+            currentRun = 0;
+
+        }
+
+    }
+
+
+    /*
+        Signal 4:
+        Autoclickers often have
+        intervals sitting on precise
+        timing increments.
+    */
+
+    let quantized = 0;
+
+
+    for (
+        const interval of trimmed
+    ) {
+
+        const rounded =
+            Math.round(
+                interval
+            );
+
+
+        if (
+            Math.abs(
+                interval - rounded
+            ) < 0.15
+        ) {
+
+            quantized++;
+
+        }
+
+    }
+
+
+    const quantizedRatio =
+        quantized /
+        trimmed.length;
+
+
+    /*
+        Build a suspicion score.
+
+        We don't accuse someone based
+        on one characteristic alone.
+    */
+
+    let suspicion = 0;
+
+
+    if (
+        extremelyRegular
+    ) {
+
+        suspicion += 3;
+
+    }
+
+
+    if (
+        coefficient < 0.05
+    ) {
+
+        suspicion += 2;
+
+    }
+
+
+    if (
+        identicalRatio > 0.75
+    ) {
+
+        suspicion += 2;
+
+    }
+
+
+    if (
+        longestRun >= 10
+    ) {
+
+        suspicion += 2;
+
+    }
+
+
+    if (
+        quantizedRatio > 0.92
+    ) {
+
+        suspicion += 1;
+
+    }
+
+
+    /*
+        Require multiple suspicious
+        signals before flagging.
+
+        Also require enough clicks.
+    */
+
+    return (
+        intervals.length >= 15 &&
+        suspicion >= 5
+    );
+
+}
+
+
+/* =========================================================
+   FINISH TEST
+========================================================= */
+
+function finishTest() {
+
+    running = false;
+
+    const stopButton = document.getElementById("stopButton");
+    if(stopButton) stopButton.style.display = "none";
+
+    clearInterval(
+        timerInterval
+    );
+
+
+    const finalCPS =
+        clicks / testTime;
+
+
+    const autoclicker =
+        detectAutoClicker(
+            clickIntervals
+        );
+
+
+    /*
+        Final CPS remains displayed.
+    */
+
+    document.getElementById(
+        "cpsStatus"
+    ).textContent =
+        "FINAL RESULT";
+
+
+    document.getElementById(
+        "cps"
+    ).textContent =
+        finalCPS.toFixed(2);
+
+
+    document.getElementById(
+        "cpsBar"
+    ).style.width =
+        Math.min(
+            finalCPS / 20 * 100,
+            100
+        ) + "%";
+
+
+    document.getElementById(
+        "time"
+    ).textContent =
+        "0.00";
+
+
+    /*
+        AUTCLICKER DETECTED
+    */
+
+    if (
+        autoclicker
+    ) {
+
+        document.getElementById(
+            "cheaterMessage"
+        ).classList.add(
+            "show"
+        );
+
+
+        document.getElementById(
+            "cpsStatus"
+        ).textContent =
+            "AUTCLICKER DETECTED";
+
+
+        /*
+            Don't add suspicious scores
+            to legitimate history.
+        */
+
+    }
+
+    else {
+
+        /*
+            HIGH SCORE
+        */
+
+        if (
+            finalCPS > highScore
+        ) {
+
+            highScore =
+                finalCPS;
+
+
+            localStorage.setItem(
+                "promouserHighScore",
+                highScore
+            );
+
+
+            document.getElementById(
+                "highScore"
+            ).textContent =
+                highScore.toFixed(2);
+
+        }
+
+
+        /*
+            SAVE HISTORY
+        */
+
+        const now =
+            new Date();
+
+
+        history.push({
+
+            score: finalCPS,
+
+            time:
+                now.toLocaleString()
+
+        });
+
+
+        localStorage.setItem(
+            "promouserCPSHistory",
+            JSON.stringify(history)
+        );
+
+
+        /*
+            REACTIONS
+        */
+
+        if (
+            testTime !== 69.69 &&
+            document.getElementById(
+                "reactionsToggle"
+            ).checked
+        ) {
+
+            showReaction(
+                finalCPS
+            );
+
+        }
+
+    }
+
+
+    /*
+        69.69 SECOND EASTER EGG.
+
+        Only exact custom time.
+    */
+
+    if (
+        testTime === 69.69
+    ) {
+
+        document.getElementById(
+            "specialMessage"
+        ).classList.add(
+            "show"
+        );
+
+    }
+
+
+    startCooldown();
+
+}
+
+
+/* =========================================================
+   REACTIONS
+========================================================= */
+
+function showReaction(cps) {
+
+    const reaction =
+        document.getElementById(
+            "reactionMessage"
+        );
+
+
+    const rounded =
+        Math.floor(cps);
+
+
+    let message = "";
+
+
+    if (rounded <= 0) {
+
+        message = "";
+
+    }
+
+    else if (rounded === 1) {
+
+        message = "turtle ahh";
+
+    }
+
+    else if (rounded === 2) {
+
+        message = "get a grip";
+
+    }
+
+    else if (rounded === 3) {
+
+        message = "get better";
+
+    }
+
+    else if (rounded === 4) {
+
+        message = "quit already";
+
+    }
+
+    else if (rounded === 5) {
+
+        message =
+            "are you serious right now";
+
+    }
+
+    else if (rounded === 6) {
+
+        message =
+            "get better";
+
+    }
+
+    else if (rounded === 7) {
+
+        message =
+            "you're ass bruv";
+
+    }
+
+    else if (rounded === 8) {
+
+        message =
+            "thats some slow shit";
+
+    }
+
+    else if (rounded === 9) {
+
+        message =
+            "some people are meant to be failures";
+
+    }
+
+    else if (rounded === 10) {
+
+        message =
+            "ur getting crushed";
+
+    }
+
+    else if (rounded === 11) {
+
+        message =
+            "not good";
+
+    }
+
+    else if (rounded === 12) {
+
+        message =
+            "pretty mid";
+
+    }
+
+    else if (rounded === 13) {
+
+        message =
+            "replace your fingers";
+
+    }
+
+    else if (rounded === 14) {
+
+        message =
+            "learn to double click";
+
+    }
+
+    else if (rounded === 15) {
+
+        message =
+            "you're gettin there";
+
+    }
+
+    else if (rounded === 16) {
+
+        message =
+            "not bad";
+
+    }
+
+    else if (rounded === 17) {
+
+        message =
+            "finally, not some ass guy";
+
+    }
+
+    else if (rounded === 18) {
+
+        message =
+            "fire";
+
+    }
+
+    else if (rounded >= 19) {
+
+        message =
+            "Respect";
+
+    }
+
+
+    reaction.textContent =
+        message;
+
+
+    if (message) {
+
+        reaction.classList.add(
+            "show"
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   COOLDOWN
+========================================================= */
+
+function startCooldown() {
+
+    cooldown = true;
+
+    clickArea.classList.add(
+        "cooldown"
+    );
+
+
+    document.getElementById(
+        "clickTitle"
+    ).textContent =
+        "TEST COMPLETE";
+
+
+    document.getElementById(
+        "clickSubtitle"
+    ).textContent =
+        "COOLDOWN — PLEASE WAIT";
+
+
+    document.getElementById(
+        "cooldownMessage"
+    ).classList.add(
+        "show"
+    );
+
+
+    cooldownTimer =
+        setTimeout(
+            function() {
+
+                cooldown = false;
+
+
+                clickArea.classList.remove(
+                    "cooldown"
+                );
+
+
+                document.getElementById(
+                    "cooldownMessage"
+                ).classList.remove(
+                    "show"
+                );
+
+
+                /*
+                    DO NOT RESET CPS.
+                */
+
+                document.getElementById(
+                    "clickTitle"
+                ).textContent =
+                    "CLICK HERE";
+
+
+                document.getElementById(
+                    "clickSubtitle"
+                ).textContent =
+                    "START CLICKING TO BEGIN";
+
+
+                document.getElementById(
+                    "time"
+                ).textContent =
+                    testTime.toFixed(2);
+
+            },
+
+            1000
+        );
+
+}
+
+
+/* =========================================================
+   RESET
+========================================================= */
+
+function resetTest() {
+
+    document.getElementById("stopButton").style.display = "none";
+
+    if (
+        running ||
+        cooldown
+    ) return;
+
+
+    clearInterval(
+        timerInterval
+    );
+
+
+    clearTimeout(
+        cooldownTimer
+    );
+
+
+    running = false;
+
+    cooldown = false;
+
+    clicks = 0;
+
+    timeLeft = testTime;
+
+
+    clickTimes = [];
+
+    clickIntervals = [];
+
+
+    clickArea.classList.remove(
+        "cooldown"
+    );
+
+
+    trackerSquare.classList.remove(
+        "active"
+    );
+
+
+    document.getElementById(
+        "clicks"
+    ).textContent =
+        "0";
+
+
+    document.getElementById(
+        "time"
+    ).textContent =
+        testTime.toFixed(2);
+
+
+    document.getElementById(
+        "cpsStatus"
+    ).textContent =
+        "LIVE CPS";
+
+
+    document.getElementById(
+        "cps"
+    ).textContent =
+        "0.00";
+
+
+    document.getElementById(
+        "cpsBar"
+    ).style.width =
+        "0%";
+
+
+    document.getElementById(
+        "clickTitle"
+    ).textContent =
+        "CLICK HERE";
+
+
+    document.getElementById(
+        "clickSubtitle"
+    ).textContent =
+        "START CLICKING TO BEGIN";
+
+
+    document.getElementById(
+        "cooldownMessage"
+    ).classList.remove(
+        "show"
+    );
+
+
+    document.getElementById(
+        "reactionMessage"
+    ).classList.remove(
+        "show"
+    );
+
+
+    document.getElementById(
+        "specialMessage"
+    ).classList.remove(
+        "show"
+    );
+
+
+    document.getElementById(
+        "cheaterMessage"
+    ).classList.remove(
+        "show"
+    );
+
+}
+
+
+/* =========================================================
+   MOUSE OPTIONS
+========================================================= */
+
+function selectMouse(type) {
+
+    if (
+        running ||
+        cooldown
+    ) return;
+
+
+    selectedMouse = type;
+
+
+    document
+        .querySelectorAll(
+            ".mouseOption"
+        )
+        .forEach(
+            option =>
+                option.classList.remove(
+                    "selected"
+                )
+        );
+
+
+    document
+        .getElementById(
+            type + "Option"
+        )
+        .classList.add(
+            "selected"
+        );
+
+
+    if (
+        type === "right"
+    ) {
+
+        clickArea.style.cursor =
+            "context-menu";
+
+    }
+
+    else {
+
+        clickArea.style.cursor =
+            "pointer";
+
+    }
+
+}
+
+
+/* =========================================================
+   CUSTOM TIME INPUT
+========================================================= */
+
+customTimeInput.addEventListener(
+    "input",
+    function() {
+
+        let value =
+            this.value;
+
+
+        value =
+            value.replace(
+                /[^0-9.]/g,
+                ""
+            );
+
+
+        const firstDot =
+            value.indexOf(".");
+
+
+        if (
+            firstDot !== -1
+        ) {
+
+            value =
+                value.substring(
+                    0,
+                    firstDot + 1
+                ) +
+
+                value
+                    .substring(
+                        firstDot + 1
+                    )
+                    .replace(
+                        /\./g,
+                        ""
+                    );
+
+        }
+
+
+        if (
+            firstDot !== -1
+        ) {
+
+            value =
+                value.substring(
+                    0,
+                    firstDot + 3
+                );
+
+        }
+
+
+        this.value =
+            value;
+
+    }
+);
+
+
+/* =========================================================
+   APPLY CUSTOM TIME
+========================================================= */
+
+function applyCustomTime() {
+
+    if (
+        running ||
+        cooldown
+    ) {
+
+        alert(
+            "Wait until the current test is finished."
+        );
+
+        return;
+
+    }
+
+
+    const rawValue =
+        customTimeInput.value.trim();
+
+
+    if (
+        !/^\d+(\.\d{1,2})?$/.test(
+            rawValue
+        )
+    ) {
+
+        alert(
+            "Please enter a valid time with up to two decimal places."
+        );
+
+        return;
+
+    }
+
+
+    const value =
+        parseFloat(
+            rawValue
+        );
+
+
+    if (
+        !value ||
+        value <= 0
+    ) {
+
+        alert(
+            "Please enter a valid time."
+        );
+
+        return;
+
+    }
+
+
+    testTime = value;
+
+
+    document
+        .querySelectorAll(
+            ".timeBtn"
+        )
+        .forEach(
+            b =>
+                b.classList.remove(
+                    "active"
+                )
+        );
+
+
+    resetTest();
+
+
+    showTestPage();
+
+}
+
+
+/* =========================================================
+   TRACKER MODE
+========================================================= */
+
+function toggleTrackerMode() {
+
+    if (
+        running ||
+        cooldown
+    ) {
+
+        /*
+            Don't allow mode changes
+            in the middle of a test.
+        */
+
+        document.getElementById(
+            "trackerToggle"
+        ).checked =
+            trackerMode;
+
+        return;
+
+    }
+
+
+    trackerMode =
+        document.getElementById(
+            "trackerToggle"
+        ).checked;
+
+
+    const difficultyBox =
+        document.getElementById(
+            "trackerDifficulty"
+        );
+
+
+    if (
+        trackerMode
+    ) {
+
+        difficultyBox.classList.add(
+            "show"
+        );
+
+    }
+
+    else {
+
+        difficultyBox.classList.remove(
+            "show"
+        );
+
+
+        clickArea.classList.remove(
+            "trackerMode"
+        );
+
+
+        trackerSquare.classList.remove(
+            "active"
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   DIFFICULTY
+========================================================= */
+
+function updateDifficulty() {
+
+    trackerDifficulty =
+        parseInt(
+            document.getElementById(
+                "difficultySlider"
+            ).value
+        );
+
+
+    document.getElementById(
+        "difficultyValue"
+    ).textContent =
+        trackerDifficulty;
+
+}
+
+
+/* =========================================================
+   MOVE TRACKER SQUARE
+========================================================= */
+
+function moveTrackerSquare() {
+
+    if (
+        !trackerMode ||
+        !running
+    ) return;
+
+
+    const areaWidth =
+        clickArea.clientWidth;
+
+
+    const areaHeight =
+        clickArea.clientHeight;
+
+
+    const squareWidth =
+        trackerSquare.offsetWidth;
+
+
+    const squareHeight =
+        trackerSquare.offsetHeight;
+
+
+    /*
+        Difficulty controls how far
+        the target can travel.
+
+        1 = easier / closer movement
+        20 = much larger movement
+    */
+
+    const maxTravelX =
+        (
+            areaWidth -
+            squareWidth -
+            20
+        ) *
+        (
+            trackerDifficulty / 20
+        );
+
+
+    const maxTravelY =
+        (
+            areaHeight -
+            squareHeight -
+            20
+        ) *
+        (
+            trackerDifficulty / 20
+        );
+
+
+    /*
+        Keep movement within the
+        click area.
+    */
+
+    const baseX =
+        10 +
+        Math.random() *
+        Math.max(
+            maxTravelX,
+            20
+        );
+
+
+    const baseY =
+        10 +
+        Math.random() *
+        Math.max(
+            maxTravelY,
+            20
+        );
+
+
+    trackerX =
+        Math.min(
+            Math.max(
+                baseX,
+                10
+            ),
+            areaWidth -
+            squareWidth -
+            10
+        );
+
+
+    trackerY =
+        Math.min(
+            Math.max(
+                baseY,
+                10
+            ),
+            areaHeight -
+            squareHeight -
+            10
+        );
+
+
+    trackerSquare.style.left =
+        trackerX + "px";
+
+
+    trackerSquare.style.top =
+        trackerY + "px";
+
+
+    trackerSquare.classList.add(
+        "active"
+    );
+
+}
+
+
+/* =========================================================
+   HISTORY
+========================================================= */
+
+function renderHistory() {
+
+    const list =
+        document.getElementById(
+            "historyList"
+        );
+
+
+    document.getElementById(
+        "totalTests"
+    ).textContent =
+        history.length;
+
+
+    if (
+        history.length === 0
+    ) {
+
+        document.getElementById(
+            "averageCPS"
+        ).textContent =
+            "0.00";
+
+
+        document.getElementById(
+            "historyBest"
+        ).textContent =
+            "0.00";
+
+
+        list.innerHTML = `
+            <div class="emptyHistory">
+                NO TESTS COMPLETED YET.
+                COMPLETE A CPS TEST TO SEE
+                YOUR PERFORMANCE HERE.
+            </div>
+        `;
+
+
+        drawChart();
+
+        return;
+
+    }
+
+
+    const scores =
+        history.map(
+            item => item.score
+        );
+
+
+    const average =
+        scores.reduce(
+            (a,b) => a + b,
+            0
+        ) / scores.length;
+
+
+    const best =
+        Math.max(
+            ...scores
+        );
+
+
+    document.getElementById(
+        "averageCPS"
+    ).textContent =
+        average.toFixed(2);
+
+
+    document.getElementById(
+        "historyBest"
+    ).textContent =
+        best.toFixed(2);
+
+
+    const highestScore =
+        Math.max(
+            ...history.map(
+                item =>
+                    item.score
+            )
+        );
+
+
+    list.innerHTML =
+        history
+        .slice()
+        .reverse()
+        .map(
+            (item,index) => {
+
+                const isHighest =
+                    item.score ===
+                    highestScore;
+
+
+                return `
+
+                    <div class="historyRow">
+
+                        <div class="historyNumber">
+                            #${history.length - index}
+                        </div>
+
+                        <div class="historyTime">
+                            ${escapeHTML(item.time)}
+                        </div>
+
+                        <div class="historyScore">
+                            ${isHighest ? "👑 " : ""}
+                            ${item.score.toFixed(2)} CPS
+                        </div>
+
+                    </div>
+
+                `;
+
+            }
+        )
+        .join("");
+
+
+    drawChart();
+
+}
+
+
+/* =========================================================
+   ESCAPE HTML
+========================================================= */
+
+function escapeHTML(text) {
+
+    const div =
+        document.createElement(
+            "div"
+        );
+
+    div.textContent =
+        text;
+
+    return div.innerHTML;
+
+}
+
+
+/* =========================================================
+   CPS CHART
+========================================================= */
+
+function drawChart() {
+
+    const canvas =
+        document.getElementById(
+            "cpsChart"
+        );
+
+
+    const ctx =
+        canvas.getContext(
+            "2d"
+        );
+
+
+    const rect =
+        canvas.getBoundingClientRect();
+
+
+    const dpr =
+        window.devicePixelRatio ||
+        1;
+
+
+    canvas.width =
+        rect.width * dpr;
+
+
+    canvas.height =
+        300 * dpr;
+
+
+    ctx.scale(
+        dpr,
+        dpr
+    );
+
+
+    const width =
+        rect.width;
+
+
+    const height =
+        300;
+
+
+    ctx.clearRect(
+        0,
+        0,
+        width,
+        height
+    );
+
+
+    if (
+        history.length === 0
+    ) return;
+
+
+    const scores =
+        history.map(
+            item =>
+                item.score
+        );
+
+
+    const maxScore =
+        Math.max(
+            ...scores,
+            1
+        );
+
+
+    const padding =
+        35;
+
+
+    const graphWidth =
+        width -
+        padding * 2;
+
+
+    const graphHeight =
+        height -
+        padding * 2;
+
+
+    /*
+        Grid
+    */
+
+    ctx.strokeStyle =
+        "rgba(255,40,40,.12)";
+
+    ctx.lineWidth =
+        1;
+
+
+    for (
+        let i = 0;
+        i <= 4;
+        i++
+    ) {
+
+        const y =
+            padding +
+            graphHeight -
+            (
+                graphHeight / 4
+            ) * i;
+
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            padding,
+            y
+        );
+
+        ctx.lineTo(
+            width - padding,
+            y
+        );
+
+        ctx.stroke();
+
+
+        ctx.fillStyle =
+            "#716565";
+
+        ctx.font =
+            "10px Arial";
+
+
+        ctx.fillText(
+            (
+                maxScore / 4 * i
+            ).toFixed(1),
+            5,
+            y + 3
+        );
+
+    }
+
+
+    /*
+        Points
+    */
+
+    const points =
+        history.map(
+            (item,index) => {
+
+                const x =
+                    history.length === 1
+
+                    ? width / 2
+
+                    : padding +
+                        (
+                            index /
+                            (
+                                history.length -
+                                1
+                            )
+                        ) *
+                        graphWidth;
+
+
+                const y =
+                    padding +
+                    graphHeight -
+                    (
+                        item.score /
+                        maxScore
+                    ) *
+                    graphHeight;
+
+
+                return {
+                    x,
+                    y
+                };
+
+            }
+        );
+
+
+    /*
+        Line
+    */
+
+    if (
+        points.length > 1
+    ) {
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            points[0].x,
+            points[0].y
+        );
+
+
+        for (
+            let i = 1;
+            i < points.length;
+            i++
+        ) {
+
+            ctx.lineTo(
+                points[i].x,
+                points[i].y
+            );
+
+        }
+
+
+        ctx.strokeStyle =
+            "#ff1717";
+
+        ctx.lineWidth =
+            3;
+
+        ctx.shadowColor =
+            "#ff1717";
+
+        ctx.shadowBlur =
+            10;
+
+        ctx.stroke();
+
+        ctx.shadowBlur =
+            0;
+
+    }
+
+
+    /*
+        Points
+    */
+
+    points.forEach(
+        point => {
+
+            ctx.beginPath();
+
+            ctx.arc(
+                point.x,
+                point.y,
+                4,
+                0,
+                Math.PI * 2
+            );
+
+
+            ctx.fillStyle =
+                "#ff2020";
+
+            ctx.shadowColor =
+                "#ff2020";
+
+            ctx.shadowBlur =
+                12;
+
+            ctx.fill();
+
+            ctx.shadowBlur =
+                0;
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   RESIZE
+========================================================= */
+
+window.addEventListener(
+    "resize",
+    function() {
+
+        if (
+            document
+                .getElementById(
+                    "historyPage"
+                )
+                .classList.contains(
+                    "active"
+                )
+        ) {
+
+            drawChart();
+
+        }
+
+
+        if (
+            trackerMode &&
+            running
+        ) {
+
+            moveTrackerSquare();
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   CUSTOMIZATION — DEFAULT + NEON PULSE ONLY
+========================================================= */
+
+let selectedUI = localStorage.getItem("promouserSelectedUI") || "default";
+
+function selectUI(type){
+
+    if(type !== "neon") type = "default";
+
+    selectedUI = type;
+
+    const defaultOption = document.getElementById("defaultUIOption");
+    const neonOption = document.getElementById("neonUIOption");
+
+    document.body.classList.toggle("neonPulse", type === "neon");
+
+    if(defaultOption) defaultOption.classList.toggle("selected", type === "default");
+    if(neonOption) neonOption.classList.toggle("selected", type === "neon");
+
+    localStorage.setItem("promouserSelectedUI", type);
+}
+
+selectUI(selectedUI);
+
+
+/* =========================================================
+   STOP CURRENT TEST
+========================================================= */
+
+function stopCurrentTest(){
+
+    if(!running && !cooldown) return;
+
+    clearInterval(timerInterval);
+    clearTimeout(cooldownTimer);
+
+    running = false;
+    cooldown = false;
+
+    clicks = 0;
+    timeLeft = testTime;
+    clickTimes = [];
+    clickIntervals = [];
+
+    clickArea.classList.remove("cooldown");
+    trackerSquare.classList.remove("active");
+
+    document.getElementById("clicks").textContent = "0";
+    document.getElementById("time").textContent = testTime.toFixed(2);
+    document.getElementById("cpsStatus").textContent = "LIVE CPS";
+    document.getElementById("cps").textContent = "0.00";
+    document.getElementById("cpsBar").style.width = "0%";
+    document.getElementById("clickTitle").textContent = "CLICK HERE";
+    document.getElementById("clickSubtitle").textContent = "START CLICKING TO BEGIN";
+    document.getElementById("cooldownMessage").classList.remove("show");
+    document.getElementById("reactionMessage").classList.remove("show");
+    document.getElementById("specialMessage").classList.remove("show");
+    document.getElementById("cheaterMessage").classList.remove("show");
+
+    document.getElementById("stopButton").style.display = "none";
+}
+
+
+
+
+</script>
+
+</body>
+</html>
