@@ -5258,10 +5258,22 @@ async function pmInitFirebase(){
         const auth=firebase.auth(),db=firebase.firestore();
         pmFirebaseReady=true;
 
+        // Explicitly use Firebase's persistent browser storage so the same
+        // account survives closing/reopening the site.
+        await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+
+        let pmAuthStateResolved=false;
+        let pmAuthStateResolve;
+        const pmAuthStateReady=new Promise(resolve=>{pmAuthStateResolve=resolve;});
+
         auth.onAuthStateChanged(async user=>{
             pmAuthUser=user;
             pmUserData=null;
             renderAccountPage();
+            if(!pmAuthStateResolved){
+                pmAuthStateResolved=true;
+                pmAuthStateResolve();
+            }
             if(!user){
                 pmSetStatus("GLOBAL OFFLINE • SIGN IN TO CONNECT");
                 return;
@@ -5298,7 +5310,12 @@ async function pmInitFirebase(){
             }catch(err){console.error(err);pmSetStatus("GLOBAL CONNECTION ERROR");}
         });
 
-        if(localStorage.getItem("promouserSignedOut")!=="1" && !auth.currentUser){
+        // IMPORTANT: wait for Firebase to restore a previously saved
+        // account before deciding whether a new guest account is needed.
+        // Without this wait, auth.currentUser can briefly be null on page
+        // startup, causing a brand-new anonymous account every visit.
+        await pmAuthStateReady;
+        if(localStorage.getItem("promouserSignedOut")!=="1" && !pmAuthUser){
             await auth.signInAnonymously();
         }
     }catch(err){console.error("ProMouser Firebase error:",err);pmFirebaseReady=false;pmSetStatus("GLOBAL OFFLINE • CHECK FIREBASE CONFIG");}
