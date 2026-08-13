@@ -1810,6 +1810,11 @@ body.neonPulse .trackerSquare{
 .pmPublicTop{margin-bottom:25px;}
 .pmPublicAvatar{width:115px;height:115px;}
 .pmPublicUsername{font-size:28px;font-weight:950;font-style:italic;word-break:break-word;}
+.pmVerificationBadge{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;font-size:9px;font-weight:950;line-height:1;margin-left:6px;vertical-align:middle;cursor:help;}
+.pmVerificationBadge.verified{background:#2f8cff;color:#fff;box-shadow:0 0 8px rgba(47,140,255,.35);}
+.pmVerificationBadge.unverified{background:#555;color:#ddd;box-shadow:0 0 6px rgba(85,85,85,.25);}
+.pmVerificationBadge.large{width:18px;height:18px;font-size:10px;}
+
 .pmFullButton{width:100%;margin-top:0;}
 
 body.neonPulse .pmOnlineStatus{color:#63858a;}
@@ -2235,7 +2240,7 @@ body.neonPulse .pmPublicUsername{color:#00e5ff;text-shadow:0 0 8px #00e5ff,0 0 2
                     <input id="pmAvatarInput" type="file" accept="image/*" hidden>
                 </div>
                 <div class="pmProfileIdentity">
-                    <div class="pmSmallLabel">USERNAME</div>
+                    <div class="pmSmallLabel">USERNAME <span id="pmOwnVerificationBadge"></span></div>
                     <input id="pmUsernameInput" class="pmTextInput" maxlength="20" placeholder="Username">
                     <textarea id="pmDescriptionInput" class="pmTextInput pmDescriptionInput" maxlength="240" placeholder="Write a short profile description..."></textarea>
                     <button class="pmActionButton" onclick="saveProfile()">SAVE PROFILE</button>
@@ -2291,7 +2296,7 @@ body.neonPulse .pmPublicUsername{color:#00e5ff;text-shadow:0 0 8px #00e5ff,0 0 2
             <div class="pmPublicTop">
                 <img id="pmPublicAvatar" class="pmPublicAvatar" alt="Profile picture">
                 <div>
-                    <div class="pmPublicUsername" id="pmPublicUsername">PLAYER</div>
+                    <div class="pmPublicUsername" id="pmPublicUsername">PLAYER <span id="pmPublicVerificationBadge"></span></div>
                     <div class="pmAccountId" id="pmPublicAccountId"></div>
                     <div class="pmAuthHint" id="pmPublicDescription">No profile description.</div>
                 </div>
@@ -5235,6 +5240,16 @@ function pmSafeDescription(text){return String(text||"").trim().slice(0,240);}
 function pmAvatarFor(data){return data&&data.profilePic?data.profilePic:PM_DEFAULT_AVATAR;}
 function pmChatId(a,b){return [a,b].sort().join("_");}
 function pmIsFriend(uid){return !!(uid&&Array.isArray(pmUserData?.friends)&&pmUserData.friends.includes(uid));}
+function pmVerificationBadge(data){
+    const verified=!!(data&&data.verified===true);
+    const span=document.createElement("span");
+    span.className="pmVerificationBadge "+(verified?"verified":"unverified");
+    span.textContent=verified?"✓":"!";
+    span.title=verified?"Verified account":"Guest / unverified account";
+    span.setAttribute("aria-label",span.title);
+    return span;
+}
+
 
 async function pmInitFirebase(){
     if(!pmOnlineConfigReady()){pmSetStatus("ONLINE FEATURES NEED FIREBASE CONFIGURATION");return;}
@@ -5261,12 +5276,19 @@ async function pmInitFirebase(){
                         usernameLower:defaultName.toLowerCase(),
                         profilePic:PM_DEFAULT_AVATAR,
                         description:"",
+                        verified:!user.isAnonymous,
                         tests:0,averageCPS:0,highestCPS:0,friends:[],
                         createdAt:firebase.firestore.FieldValue.serverTimestamp(),
                         updatedAt:firebase.firestore.FieldValue.serverTimestamp()
                     });
-                }else if(snap.data().description===undefined){
-                    await ref.set({description:"",updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+                }else if(snap.data().description===undefined || snap.data().verified===undefined){
+                    await ref.set({
+                        ...(snap.data().description===undefined?{description:""}:{}),
+                        verified:!user.isAnonymous,
+                        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+                    },{merge:true});
+                }else if(snap.data().verified !== !user.isAnonymous){
+                    await ref.set({verified:!user.isAnonymous,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
                 }
                 await pmLoadOwnProfile();
                 pmSetStatus("GLOBAL ONLINE • ACCOUNT CONNECTED");
@@ -5295,7 +5317,7 @@ function renderOwnProfile(){
     const avatar=document.getElementById("pmProfileAvatar");if(avatar)avatar.src=pmAvatarFor(pmUserData);
     const input=document.getElementById("pmUsernameInput");if(input)input.value=pmUserData.username||"";
     const desc=document.getElementById("pmDescriptionInput");if(desc)desc.value=pmUserData.description||"";
-    const id=document.getElementById("pmAccountId");if(id&&pmAuthUser)id.textContent="ACCOUNT ID: "+pmAuthUser.uid;
+    const id=document.getElementById("pmAccountId");if(id&&pmAuthUser)id.textContent="ACCOUNT ID: "+pmAuthUser.uid;const ownBadge=document.getElementById("pmOwnVerificationBadge");if(ownBadge){ownBadge.innerHTML="";ownBadge.appendChild(pmVerificationBadge(pmUserData));}
     const tests=document.getElementById("pmProfileTests");const avg=document.getElementById("pmProfileAverage");const high=document.getElementById("pmProfileHighest");
     if(tests)tests.textContent=String(pmUserData.tests||0);
     if(avg)avg.textContent=Number(pmUserData.averageCPS||0).toFixed(2);
@@ -5327,7 +5349,7 @@ function renderGlobalLeaderboard(rows){
         const playerEl=document.createElement("div");playerEl.className="pmPlayer";
         const img=document.createElement("img");img.className="pmRowAvatar";img.src=pmAvatarFor(player);img.alt="";
         const info=document.createElement("div");info.style.minWidth="0";
-        const name=document.createElement("div");name.className="pmPlayerName";name.textContent=player.username||"Unknown Player";
+        const name=document.createElement("div");name.className="pmPlayerName";name.textContent=player.username||"Unknown Player";name.appendChild(pmVerificationBadge(player));
         const sub=document.createElement("div");sub.className="pmPlayerSub";sub.textContent=(player.tests||0)+" TEST"+((player.tests||0)===1?"":"S");
         info.append(name,sub);playerEl.append(img,info);
         const best=document.createElement("div");best.className="pmScore";best.textContent=Number(player.highestCPS||0).toFixed(2);
@@ -5366,7 +5388,7 @@ async function renderFriends(){
     box.innerHTML='<div class="pmLoading">Loading friends...</div>';
     try{
         const snaps=await Promise.all(ids.slice(0,50).map(id=>firebase.firestore().collection("users").doc(id).get()));box.innerHTML="";
-        snaps.filter(s=>s.exists).forEach(s=>{const data=s.data();const row=document.createElement("div");row.className="pmFriendRow";row.onclick=()=>openChatWithFriend(s.id);row.innerHTML=`<div class="pmFriendInfo"><img class="pmFriendAvatar" src="${pmAvatarFor(data)}" alt=""><div><div class="pmPlayerName"></div><div class="pmPlayerSub"></div></div></div><div class="pmScore">CHAT</div>`;row.querySelector(".pmPlayerName").textContent=data.username||"Unknown Player";row.querySelector(".pmPlayerSub").textContent=`AVG ${Number(data.averageCPS||0).toFixed(2)} CPS`;box.appendChild(row);});
+        snaps.filter(s=>s.exists).forEach(s=>{const data=s.data();const row=document.createElement("div");row.className="pmFriendRow";row.onclick=()=>openChatWithFriend(s.id);row.innerHTML=`<div class="pmFriendInfo"><img class="pmFriendAvatar" src="${pmAvatarFor(data)}" alt=""><div><div class="pmPlayerName"></div><div class="pmPlayerSub"></div></div></div><div class="pmScore">CHAT</div>`;row.querySelector(".pmPlayerName").textContent=data.username||"Unknown Player";row.querySelector(".pmPlayerName").appendChild(pmVerificationBadge(data));row.querySelector(".pmPlayerSub").textContent=`AVG ${Number(data.averageCPS||0).toFixed(2)} CPS`;box.appendChild(row);});
         if(!box.children.length)box.innerHTML='<div class="pmEmpty">No active friend profiles found.</div>';
     }catch(err){console.error(err);box.innerHTML='<div class="pmEmpty">Could not load friends.</div>';}
 }
@@ -5389,10 +5411,8 @@ async function addFriendByUsername(){
 async function sendFriendRequest(targetId){
     if(!pmFirebaseReady||!pmAuthUser||!targetId||targetId===pmAuthUser.uid)return;
     if(pmIsFriend(targetId))return;
-    const db=firebase.firestore();const requestId=pmAuthUser.uid+"_"+targetId;const reverseId=targetId+"_"+pmAuthUser.uid;
+    const db=firebase.firestore();const requestId=pmAuthUser.uid+"_"+targetId;
     try{
-        const reverse=await db.collection("friendRequests").doc(reverseId).get();
-        if(reverse.exists&&reverse.data().status==="pending")return alert("That player already sent you a friend request. Check your profile requests.");
         await db.collection("friendRequests").doc(requestId).set({from:pmAuthUser.uid,to:targetId,fromUsername:pmUserData?.username||"Player",status:"pending",createdAt:firebase.firestore.FieldValue.serverTimestamp()});
         updatePublicFriendButton();alert("Friend request sent.");
     }catch(err){console.error(err);alert("Could not send friend request.");}
@@ -5410,7 +5430,7 @@ async function loadFriendRequests(){
             const row=document.createElement("div");row.className="pmRequestRow";
             const info=document.createElement("div");info.className="pmRequestInfo";
             const img=document.createElement("img");img.className="pmRequestAvatar";img.src=pmAvatarFor(data);img.alt="";
-            const txt=document.createElement("div");const name=document.createElement("div");name.className="pmPlayerName";name.textContent=data.username||d.fromUsername||"Player";const sub=document.createElement("div");sub.className="pmPlayerSub";sub.textContent="WANTS TO BE YOUR FRIEND";txt.append(name,sub);info.append(img,txt);
+            const txt=document.createElement("div");const name=document.createElement("div");name.className="pmPlayerName";name.textContent=data.username||d.fromUsername||"Player";name.appendChild(pmVerificationBadge(data));const sub=document.createElement("div");sub.className="pmPlayerSub";sub.textContent="WANTS TO BE YOUR FRIEND";txt.append(name,sub);info.append(img,txt);
             const actions=document.createElement("div");actions.className="pmRequestActions";
             const accept=document.createElement("button");accept.className="pmActionButton";accept.textContent="ACCEPT";accept.onclick=()=>acceptFriendRequest(doc.id,d.from);
             const reject=document.createElement("button");reject.className="pmActionButton pmSecondaryButton";reject.textContent="DECLINE";reject.onclick=()=>rejectFriendRequest(doc.id);
@@ -5425,7 +5445,7 @@ async function rejectFriendRequest(requestId){try{await firebase.firestore().col
 
 async function openPublicProfile(uid){
     if(running||cooldown)return;if(!pmFirebaseReady)return alert("Global profiles need Firebase.");
-    try{const snap=await firebase.firestore().collection("users").doc(uid).get();if(!snap.exists)return alert("That player profile no longer exists.");pmPublicUserId=uid;pmPublicUserData=snap.data();document.getElementById("pmPublicAvatar").src=pmAvatarFor(pmPublicUserData);document.getElementById("pmPublicUsername").textContent=pmPublicUserData.username||"Unknown Player";document.getElementById("pmPublicAccountId").textContent="";document.getElementById("pmPublicDescription").textContent=pmPublicUserData.description||"No profile description.";document.getElementById("pmPublicTests").textContent=String(pmPublicUserData.tests||0);document.getElementById("pmPublicAverage").textContent=Number(pmPublicUserData.averageCPS||0).toFixed(2);document.getElementById("pmPublicHighest").textContent=Number(pmPublicUserData.highestCPS||0).toFixed(2);await updatePublicFriendButton();hideAllPages();document.getElementById("publicProfilePage").classList.add("active");}catch(err){console.error(err);alert("Could not open that profile.");}}
+    try{const snap=await firebase.firestore().collection("users").doc(uid).get();if(!snap.exists)return alert("That player profile no longer exists.");pmPublicUserId=uid;pmPublicUserData=snap.data();document.getElementById("pmPublicAvatar").src=pmAvatarFor(pmPublicUserData);document.getElementById("pmPublicUsername").textContent=pmPublicUserData.username||"Unknown Player";const publicBadge=document.getElementById("pmPublicVerificationBadge");if(publicBadge){publicBadge.innerHTML="";publicBadge.appendChild(pmVerificationBadge(pmPublicUserData));}document.getElementById("pmPublicAccountId").textContent="";document.getElementById("pmPublicDescription").textContent=pmPublicUserData.description||"No profile description.";document.getElementById("pmPublicTests").textContent=String(pmPublicUserData.tests||0);document.getElementById("pmPublicAverage").textContent=Number(pmPublicUserData.averageCPS||0).toFixed(2);document.getElementById("pmPublicHighest").textContent=Number(pmPublicUserData.highestCPS||0).toFixed(2);await updatePublicFriendButton();hideAllPages();document.getElementById("publicProfilePage").classList.add("active");}catch(err){console.error(err);alert("Could not open that profile.");}}
 
 async function updatePublicFriendButton(){
     const btn=document.getElementById("pmPublicFriendButton");if(!btn||!pmPublicUserId)return;
@@ -5459,7 +5479,7 @@ async function loadChatFriends(){
     const box=document.getElementById("pmChatFriends");if(!box)return;box.innerHTML="";
     const ids=Array.isArray(pmUserData?.friends)?pmUserData.friends:[];
     if(!ids.length){box.innerHTML='<div class="pmEmpty">Add friends to start chatting.</div>';return;}
-    try{const snaps=await Promise.all(ids.map(id=>firebase.firestore().collection("users").doc(id).get()));snaps.filter(s=>s.exists).forEach(s=>{const d=s.data(),row=document.createElement("div");row.className="pmChatFriendRow"+(s.id===pmActiveChatFriendId?" active":"");row.onclick=()=>openChatWithFriend(s.id);const img=document.createElement("img");img.className="pmChatFriendAvatar";img.src=pmAvatarFor(d);const name=document.createElement("div");name.className="pmPlayerName";name.textContent=d.username||"Player";row.append(img,name);box.appendChild(row);});}catch(err){console.error(err);box.innerHTML='<div class="pmEmpty">Could not load friends.</div>';}}
+    try{const snaps=await Promise.all(ids.map(id=>firebase.firestore().collection("users").doc(id).get()));snaps.filter(s=>s.exists).forEach(s=>{const d=s.data(),row=document.createElement("div");row.className="pmChatFriendRow"+(s.id===pmActiveChatFriendId?" active":"");row.onclick=()=>openChatWithFriend(s.id);const img=document.createElement("img");img.className="pmChatFriendAvatar";img.src=pmAvatarFor(d);const name=document.createElement("div");name.className="pmPlayerName";name.textContent=d.username||"Player";name.appendChild(pmVerificationBadge(d));row.append(img,name);box.appendChild(row);});}catch(err){console.error(err);box.innerHTML='<div class="pmEmpty">Could not load friends.</div>';}}
 async function loadChat(uid){
     if(pmChatUnsubscribe)pmChatUnsubscribe();const title=document.getElementById("pmChatTitle"),messages=document.getElementById("pmChatMessages"),input=document.getElementById("pmChatInput"),send=document.getElementById("pmChatSend");
     try{const friend=await firebase.firestore().collection("users").doc(uid).get();const name=friend.exists?(friend.data().username||"Friend"):"Friend";title.textContent="CHAT WITH "+name;input.disabled=false;send.disabled=false;const chatRef=firebase.firestore().collection("chats").doc(pmChatId(pmAuthUser.uid,uid));await chatRef.set({participants:[pmAuthUser.uid,uid],updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});pmChatUnsubscribe=chatRef.collection("messages").orderBy("createdAt","asc").limitToLast(200).onSnapshot(snapshot=>{messages.innerHTML="";if(snapshot.empty){messages.innerHTML='<div class="pmChatEmpty">No messages yet. Say hello!</div>';return;}snapshot.forEach(doc=>{const d=doc.data(),bubble=document.createElement("div");bubble.className="pmChatBubble"+(d.sender===pmAuthUser.uid?" mine":"");const text=document.createElement("div");text.textContent=d.text||"";const meta=document.createElement("div");meta.className="pmChatBubbleMeta";meta.textContent=d.sender===pmAuthUser.uid?"YOU":"FRIEND";bubble.append(text,meta);messages.appendChild(bubble);});messages.scrollTop=messages.scrollHeight;},err=>{console.error(err);messages.innerHTML='<div class="pmChatEmpty">Could not load chat.</div>';});}catch(err){console.error(err);input.disabled=true;send.disabled=true;messages.innerHTML='<div class="pmChatEmpty">Could not open chat.</div>';}}
@@ -5469,8 +5489,22 @@ async function sendChatMessage(){
 
 function openAccount(){if(running||cooldown)return;hideAllPages();document.getElementById("accountPage").classList.add("active");renderAccountPage();}
 function renderAccountPage(){
-    const status=document.getElementById("pmAuthStatus"),identity=document.getElementById("pmAccountIdentity"),logout=document.getElementById("pmLogoutButton");if(!status)return;
-    if(pmAuthUser){status.textContent=pmAuthUser.isAnonymous?"GUEST ACCOUNT • Upgrade it below with email + password.":"SIGNED IN • "+(pmAuthUser.email||"Account");identity.textContent=pmAuthUser.isAnonymous?"Guest account: "+pmAuthUser.uid:"Signed in as "+pmAuthUser.email;logout.disabled=pmAuthUser.isAnonymous;logout.textContent=pmAuthUser.isAnonymous?"UPGRADE ACCOUNT TO LOG OUT":"LOG OUT";}else{status.textContent="NOT SIGNED IN";identity.textContent="Sign in or create an account to use online features.";logout.disabled=false;logout.textContent="LOG OUT";}}
+    const status=document.getElementById("pmAuthStatus"),identity=document.getElementById("pmAccountIdentity"),logout=document.getElementById("pmLogoutButton"),forms=document.getElementById("pmAuthForms");if(!status)return;
+    if(pmAuthUser){
+        const signedIn=!pmAuthUser.isAnonymous;
+        status.textContent=signedIn?"SIGNED IN • "+(pmAuthUser.email||"Account"):"GUEST ACCOUNT • Upgrade it below with email + password.";
+        identity.textContent=signedIn?"Signed in as "+pmAuthUser.email:"Guest account: "+pmAuthUser.uid;
+        logout.disabled=pmAuthUser.isAnonymous;
+        logout.textContent=pmAuthUser.isAnonymous?"UPGRADE ACCOUNT TO LOG OUT":"LOG OUT";
+        if(forms)forms.style.display=signedIn?"none":"grid";
+    }else{
+        status.textContent="NOT SIGNED IN";
+        identity.textContent="Sign in or create an account to use online features.";
+        logout.disabled=false;
+        logout.textContent="LOG OUT";
+        if(forms)forms.style.display="grid";
+    }
+}
 async function pmSignup(){
     const email=String(document.getElementById("pmSignupEmail")?.value||"").trim(),password=String(document.getElementById("pmSignupPassword")?.value||"");if(!email||password.length<6)return alert("Enter a valid email and a password with at least 6 characters.");
     try{const auth=firebase.auth();localStorage.removeItem("promouserSignedOut");if(auth.currentUser?.isAnonymous){const cred=firebase.auth.EmailAuthProvider.credential(email,password);await auth.currentUser.linkWithCredential(cred);alert("Account created! Your existing ProMouser profile was kept.");}else{await auth.createUserWithEmailAndPassword(email,password);alert("Account created!");}}catch(err){console.error(err);if(err.code==="auth/email-already-in-use")alert("That email already has an account. Use Log In instead.");else alert("Could not create the account: "+(err.message||err.code));}}
@@ -5490,7 +5524,7 @@ async function clearCPSData(){
 /* Existing finishTest() calls this only for legitimate tests. */
 async function promouserSyncTestResult(finalCPS){
     if(!pmFirebaseReady||!pmAuthUser||!Number.isFinite(finalCPS))return;
-    try{const db=firebase.firestore(),ref=db.collection("users").doc(pmAuthUser.uid);await db.runTransaction(async tx=>{const snap=await tx.get(ref),data=snap.exists?snap.data():{},oldTests=Number(data.tests||0),oldAvg=Number(data.averageCPS||0),oldHigh=Number(data.highestCPS||0),newTests=oldTests+1,newAvg=((oldAvg*oldTests)+finalCPS)/newTests;tx.set(ref,{username:data.username||"MouseUser"+pmAuthUser.uid.slice(-4).toUpperCase(),usernameLower:data.usernameLower||(data.username||"").toLowerCase(),profilePic:data.profilePic||PM_DEFAULT_AVATAR,description:data.description||"",tests:newTests,averageCPS:newAvg,highestCPS:Math.max(oldHigh,finalCPS),friends:Array.isArray(data.friends)?data.friends:[],updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});});await pmLoadOwnProfile();}catch(err){console.error("Could not sync CPS score:",err);}}
+    try{const db=firebase.firestore(),ref=db.collection("users").doc(pmAuthUser.uid);await db.runTransaction(async tx=>{const snap=await tx.get(ref),data=snap.exists?snap.data():{},oldTests=Number(data.tests||0),oldAvg=Number(data.averageCPS||0),oldHigh=Number(data.highestCPS||0),newTests=oldTests+1,newAvg=((oldAvg*oldTests)+finalCPS)/newTests;tx.set(ref,{username:data.username||"MouseUser"+pmAuthUser.uid.slice(-4).toUpperCase(),usernameLower:data.usernameLower||(data.username||"").toLowerCase(),profilePic:data.profilePic||PM_DEFAULT_AVATAR,description:data.description||"",verified:data.verified===true,tests:newTests,averageCPS:newAvg,highestCPS:Math.max(oldHigh,finalCPS),friends:Array.isArray(data.friends)?data.friends:[],updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});});await pmLoadOwnProfile();}catch(err){console.error("Could not sync CPS score:",err);}}
 
 pmInitFirebase();
 </script>
