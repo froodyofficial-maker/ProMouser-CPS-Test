@@ -1972,6 +1972,53 @@ body.neonPulse .pmCollectionItem.equipped{border-color:#00e5ff;box-shadow:0 0 18
 body.neonPulse .pmCollectionStatus.equippedText{color:#00e5ff;}
 @media(max-width:700px){.pmCollectionOptions{grid-template-columns:1fr;}.pmNotificationHeaderRow{align-items:flex-start;flex-direction:column;}}
 
+
+/* =========================================================
+   REDEEM / CHECKOUT / ADMIN / CHAT REPLIES — ADDITIVE ONLY
+========================================================= */
+.pmCheckoutCard,.pmAdminCard{background:#050505;border:1px solid #451313;border-radius:14px;padding:22px;margin-bottom:18px;}
+.pmCheckoutItem{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:15px;background:#080808;border:1px solid #301212;border-radius:10px;margin-bottom:16px;}
+.pmCheckoutItemTitle{font-size:18px;font-weight:950;}
+.pmCheckoutItemSub{color:#777;font-size:11px;margin-top:5px;}
+.pmCheckoutPrice{color:#ffd54a;font-weight:950;white-space:nowrap;}
+.pmCheckoutActions{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.pmRedeemBox{display:grid;grid-template-columns:1fr auto;gap:10px;margin-bottom:18px;}
+.pmRedeemHint{color:#777;font-size:10px;margin-top:7px;line-height:1.5;}
+.pmGiftCode{font-size:24px;font-weight:1000;letter-spacing:3px;color:#fff;background:#000;border:1px dashed #ff1717;border-radius:10px;padding:18px;text-align:center;margin:14px 0;word-break:break-all;}
+.pmAdminTarget{display:grid;grid-template-columns:1fr auto;gap:10px;margin-bottom:15px;}
+.pmAdminTabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:15px;}
+.pmAdminTab{padding:9px 13px;background:#080808;border:1px solid #451313;color:#aaa;border-radius:8px;font-weight:900;cursor:pointer;}
+.pmAdminTab.active,.pmAdminTab:hover{color:#fff;border-color:#ff1717;box-shadow:0 0 12px rgba(255,0,0,.2);}
+.pmAdminGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;}
+.pmAdminStat{background:#080808;border:1px solid #301212;border-radius:10px;padding:14px;}
+.pmAdminStatLabel{color:#6f6565;font-size:9px;letter-spacing:2px;text-transform:uppercase;}
+.pmAdminStatValue{font-size:20px;font-weight:950;margin-top:6px;word-break:break-word;}
+.pmAdminList{display:flex;flex-direction:column;gap:8px;margin-top:14px;}
+.pmAdminRow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 13px;background:#080808;border:1px solid #301212;border-radius:9px;}
+.pmAdminRowInfo{min-width:0;flex:1;}
+.pmAdminRowTitle{font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pmAdminRowSub{color:#777;font-size:9px;margin-top:4px;word-break:break-word;}
+.pmAdminDanger{background:#260606!important;border-color:#a10d0d!important;color:#ff6b6b!important;}
+.pmAdminDanger:hover{background:#4a0808!important;border-color:#ff1717!important;color:#fff!important;}
+.pmReplyBar{display:none;align-items:center;justify-content:space-between;gap:10px;padding:9px 12px;background:#0b0b0b;border-top:1px solid #351313;color:#aaa;font-size:10px;}
+.pmReplyBar.show{display:flex;}
+.pmReplyPreview{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pmReplyPreview strong{color:#fff;}
+.pmReplyCancel{padding:5px 8px;background:#111;border:1px solid #451313;color:#aaa;border-radius:6px;cursor:pointer;}
+.pmReplyCancel:hover{border-color:#ff1717;color:#fff;}
+.pmChatBubbleWrap{display:flex;flex-direction:column;max-width:82%;align-self:flex-start;gap:3px;}
+.pmChatBubbleWrap.mine{align-self:flex-end;align-items:flex-end;}
+.pmChatBubbleWrap .pmChatBubble{max-width:100%;}
+.pmReplyQuote{font-size:10px;color:#8c7b7b;padding:6px 9px;border-left:2px solid #8d1717;background:#090909;border-radius:5px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pmChatReplyButton{padding:3px 7px;background:transparent;border:1px solid #351313;color:#777;border-radius:5px;font-size:9px;cursor:pointer;align-self:flex-start;}
+.pmChatReplyButton:hover{border-color:#ff1717;color:#fff;}
+.pmChatBubbleWrap.mine .pmChatReplyButton{align-self:flex-end;}
+body.neonPulse .pmCheckoutCard,body.neonPulse .pmAdminCard,body.neonPulse .pmAdminStat,body.neonPulse .pmAdminRow,body.neonPulse .pmReplyBar,body.neonPulse .pmReplyQuote{background:#050d11;border-color:#07515e;}
+body.neonPulse .pmGiftCode{border-color:#00e5ff;color:#00e5ff;}
+body.neonPulse .pmAdminTab.active,body.neonPulse .pmAdminTab:hover,body.neonPulse .pmChatReplyButton:hover{border-color:#00e5ff;}
+body.neonPulse .pmReplyQuote{border-left-color:#00e5ff;}
+@media(max-width:700px){.pmCheckoutActions{grid-template-columns:1fr;}.pmRedeemBox,.pmAdminTarget{grid-template-columns:1fr;}.pmCheckoutItem{align-items:flex-start;flex-direction:column;}.pmChatBubbleWrap{max-width:92%;}}
+
 </style>
 
 <!-- ProMouser Global Features — Firebase SDKs -->
@@ -2002,6 +2049,7 @@ body.neonPulse .pmCollectionStatus.equippedText{color:#00e5ff;}
         <button class="headerButton pmNavButton" onclick="openShop()">🛒 SHOP</button>
         <button class="headerButton pmNavButton pmNotificationButton" onclick="openNotifications()">🔔 NOTIFICATIONS <span id="pmNotificationBadge" class="pmNotificationBadge" style="display:none;">0</span></button>
         <button class="headerButton pmNavButton" onclick="openAccount()">🔐 ACCOUNT</button>
+<button class="headerButton pmNavButton" id="pmAdminNavButton" style="display:none;" onclick="openAdmin()">🛡 ADMIN</button>
     </div>
 
     <button
@@ -2394,7 +2442,16 @@ body.neonPulse .pmCollectionStatus.equippedText{color:#00e5ff;}
             <div class="pmAuthHint" style="margin:0;text-align:right;">Earn 1 coin for every 1 CPS on legitimate public tests. The 67 border uses a looping GIF asset.</div>
         </div>
 
-        <div class="pmShopGrid">
+        <div class="pmCheckoutCard">
+    <div class="pmSmallLabel">REDEEM A CODE</div>
+    <div class="pmRedeemBox">
+        <input id="pmRedeemCodeInput" class="pmTextInput" maxlength="80" placeholder="Enter redeem code" oninput="pmCheckAdminCode()" onkeydown="if(event.key==='Enter') redeemShopCode()">
+        <button class="pmActionButton" onclick="redeemShopCode()">REDEEM</button>
+    </div>
+    <div class="pmRedeemHint">Gift codes are single-use. Redeeming a code permanently adds that item to your account.</div>
+</div>
+
+<div class="pmShopGrid">
             <div class="pmShopCard">
                 <div class="pmShopPreview">
                     <div class="pmCosmeticPreview">
@@ -2409,7 +2466,7 @@ body.neonPulse .pmCollectionStatus.equippedText{color:#00e5ff;}
                 </div>
                 <div class="pmShopDescription">A 67-themed profile effect. Buy it with coins, then equip it to show it around your ProMouser avatar.</div>
                 <div class="pmShopActions">
-                    <button class="pmActionButton" id="pm67BuyButton" onclick="buy67Border()">BUY • 300 🪙</button>
+                    <button class="pmActionButton" id="pm67BuyButton" onclick="openShopCheckout('border_67')">BUY • 300 🪙</button>
                     <button class="pmActionButton pmSecondaryButton" id="pm67EquipButton" onclick="equip67Border()" style="display:none;">EQUIP</button>
                 </div>
                 <div class="pmShopOwnedNote" id="pm67OwnedNote"></div>
@@ -2427,10 +2484,44 @@ body.neonPulse .pmCollectionStatus.equippedText{color:#00e5ff;}
                 </div>
                 <div class="pmShopDescription">A dark futuristic interface theme. Buy it with coins, then equip or unequip it from My UI.</div>
                 <div class="pmShopActions">
-                    <button class="pmActionButton" id="pmVoidBuyButton" onclick="buyVoidUI()">BUY • 500 🪙</button>
+                    <button class="pmActionButton" id="pmVoidBuyButton" onclick="openShopCheckout('ui_void_matrix')">BUY • 500 🪙</button>
                     <button class="pmActionButton pmSecondaryButton" id="pmVoidEquipButton" onclick="toggleVoidUI()" style="display:none;">EQUIP</button>
                 </div>
                 <div class="pmShopOwnedNote" id="pmVoidOwnedNote"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- =========================================================
+     SHOP CHECKOUT PAGE — ADDITIVE ONLY
+========================================================= -->
+<div class="page" id="shopCheckoutPage">
+    <div class="secondaryPage">
+        <div class="pageHeader">
+            <h1>SHOP <span>CHECKOUT</span></h1>
+            <button class="backButton" onclick="openShop()">← SHOP</button>
+        </div>
+        <div class="pmCheckoutCard">
+            <div class="pmSmallLabel">YOU ARE BUYING</div>
+            <div class="pmCheckoutItem">
+                <div><div class="pmCheckoutItemTitle" id="pmCheckoutItemName">ITEM</div><div class="pmCheckoutItemSub" id="pmCheckoutItemDescription"></div></div>
+                <div class="pmCheckoutPrice" id="pmCheckoutItemPrice">🪙 0</div>
+            </div>
+            <div class="pmAuthHint">Choose how you want to receive it.</div>
+            <div class="pmCheckoutActions">
+                <button class="pmActionButton" onclick="pmCheckoutBuyNow()">BUY NOW</button>
+                <button class="pmActionButton pmSecondaryButton" onclick="pmCheckoutGift()">GIVE REDEEMABLE CODE</button>
+            </div>
+        </div>
+        <div class="pmCheckoutCard" id="pmGeneratedCodeCard" style="display:none;">
+            <div class="pmSmallLabel">REDEEMABLE CODE CREATED</div>
+            <div class="pmGiftCode" id="pmGeneratedCode">CODE</div>
+            <div class="pmAuthHint">This code can be redeemed by another player <strong>once only</strong>. Keep it private until you give it to them.</div>
+            <div class="pmCheckoutActions">
+                <button class="pmActionButton" onclick="pmCopyGiftCode()">COPY CODE</button>
+                <button class="pmActionButton pmSecondaryButton" onclick="openShop()">BACK TO SHOP</button>
             </div>
         </div>
     </div>
@@ -2449,7 +2540,9 @@ body.neonPulse .pmCollectionStatus.equippedText{color:#00e5ff;}
 
         <div class="pmPublicProfileCard">
             <div class="pmPublicTop">
-                <img id="pmPublicAvatar" class="pmPublicAvatar" alt="Profile picture">
+                <div class="pmPublicAvatarStage">
+                    <img id="pmPublicAvatar" class="pmPublicAvatar" alt="Profile picture">
+                </div>
                 <div>
                     <div class="pmPublicUsername" id="pmPublicUsername">PLAYER <span id="pmPublicVerificationBadge"></span></div>
                     <div class="pmAccountId" id="pmPublicAccountId"></div>
@@ -2521,6 +2614,7 @@ body.neonPulse .pmCollectionStatus.equippedText{color:#00e5ff;}
                 <div class="pmChatMessages" id="pmChatMessages">
                     <div class="pmChatEmpty">Choose a friend to start chatting.</div>
                 </div>
+                <div class="pmReplyBar" id="pmChatReplyBar"><div class="pmReplyPreview" id="pmChatReplyPreview"></div><button class="pmReplyCancel" onclick="pmCancelReply()">CANCEL</button></div>
                 <div class="pmChatComposer">
                     <input id="pmChatInput" class="pmTextInput" maxlength="500" placeholder="Type a message..." disabled onkeydown="if(event.key==='Enter') sendChatMessage()">
                     <button id="pmChatSend" class="pmActionButton" onclick="sendChatMessage()" disabled>SEND</button>
@@ -2576,6 +2670,38 @@ body.neonPulse .pmCollectionStatus.equippedText{color:#00e5ff;}
             <div id="pmNotificationsList" class="pmNotificationsList">
                 <div class="pmEmpty">No new messages.</div>
             </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- =========================================================
+     ADMIN PAGE — ADDITIVE ONLY
+========================================================= -->
+<div class="page" id="adminPage">
+    <div class="secondaryPage">
+        <div class="pageHeader">
+            <h1>PROMOUSER <span>ADMIN</span></h1>
+            <button class="backButton" onclick="showTestPage()">← BACK</button>
+        </div>
+        <div class="pmAdminCard">
+            <div class="pmSmallLabel">ACCOUNT LOOKUP</div>
+            <div class="pmAdminTarget">
+                <input id="pmAdminTargetInput" class="pmTextInput" placeholder="Username or account ID" onkeydown="if(event.key==='Enter') pmAdminLookup()">
+                <button class="pmActionButton" onclick="pmAdminLookup()">LOOK UP</button>
+            </div>
+            <div class="pmAuthHint">Admin tools can inspect profile data, friends, owned items, coins, chat messages and CPS history. Destructive actions are permanent.</div>
+        </div>
+        <div class="pmAdminCard" id="pmAdminAccountCard" style="display:none;">
+            <div id="pmAdminAccountSummary"></div>
+            <div class="pmAdminTabs">
+                <button class="pmAdminTab active" onclick="pmAdminShowTab('overview')">OVERVIEW</button>
+                <button class="pmAdminTab" onclick="pmAdminShowTab('messages')">MESSAGES</button>
+                <button class="pmAdminTab" onclick="pmAdminShowTab('friends')">FRIENDS</button>
+                <button class="pmAdminTab" onclick="pmAdminShowTab('items')">OWNED ITEMS</button>
+                <button class="pmAdminTab" onclick="pmAdminShowTab('tests')">CPS RESULTS</button>
+            </div>
+            <div id="pmAdminContent"></div>
         </div>
     </div>
 </div>
@@ -5468,6 +5594,7 @@ let pmPublicUserData=null;
 let pmGlobalUnsubscribe=null;
 let pmChatUnsubscribe=null;
 let pmActiveChatFriendId=null;
+let pmReplyToMessage=null;
 let pmPrivateMode=false;
 
 const PM_DEFAULT_AVATAR="data:image/svg+xml;charset=UTF-8,"+encodeURIComponent(`
@@ -5545,6 +5672,8 @@ async function pmInitFirebase(){
                         coins:0,
                         ownedCosmetics:[],
                         equippedBorder:"",
+                        equippedUI:"default",
+                        equippedAvatar:"custom",
                         friends:[],
                         publicTestHistory:[],
                         createdAt:firebase.firestore.FieldValue.serverTimestamp(),
@@ -5563,6 +5692,8 @@ async function pmInitFirebase(){
                     if(existing.coins===undefined) migration.coins=0;
                     if(!Array.isArray(existing.ownedCosmetics)) migration.ownedCosmetics=[];
                     if(existing.equippedBorder===undefined) migration.equippedBorder="";
+                    if(existing.equippedUI===undefined) migration.equippedUI="default";
+                    if(existing.equippedAvatar===undefined) migration.equippedAvatar="custom";
                     if(!Array.isArray(existing.publicTestHistory)){
                         const existingPublicTests=Number(existing.publicTests||0);
                         if(existingPublicTests>0 && history.length===existingPublicTests){
@@ -5860,7 +5991,7 @@ async function rejectFriendRequest(requestId){try{await firebase.firestore().col
 
 async function openPublicProfile(uid){
     if(running||cooldown)return;if(!pmFirebaseReady)return alert("Global profiles need Firebase.");
-    try{const snap=await firebase.firestore().collection("users").doc(uid).get();if(!snap.exists)return alert("That player profile no longer exists.");pmPublicUserId=uid;pmPublicUserData=snap.data();document.getElementById("pmPublicAvatar").src=pmAvatarFor(pmPublicUserData);const publicAvatar=document.getElementById("pmPublicAvatar");const publicWrap=publicAvatar?.parentElement;if(publicWrap){publicWrap.classList.add("pmPublicAvatarStage");publicWrap.querySelectorAll(".pm67Overlay").forEach(el=>el.remove());if(pmHas67Equipped(pmPublicUserData)){const overlay=document.createElement("img");overlay.className="pm67Overlay";overlay.src=PM_COSMETICS.border67.asset;overlay.alt="";publicWrap.appendChild(overlay);}}document.getElementById("pmPublicUsername").textContent=pmPublicUserData.username||"Unknown Player";const publicBadge=document.getElementById("pmPublicVerificationBadge");if(publicBadge){publicBadge.innerHTML="";publicBadge.appendChild(pmVerificationBadge(pmPublicUserData));}document.getElementById("pmPublicAccountId").textContent="";document.getElementById("pmPublicDescription").textContent=pmPublicUserData.description||"No profile description.";document.getElementById("pmPublicTests").textContent=String(pmPublicUserData.tests||0);document.getElementById("pmPublicAverage").textContent=Number(pmPublicUserData.averageCPS||0).toFixed(2);document.getElementById("pmPublicHighest").textContent=Number(pmPublicUserData.highestCPS||0).toFixed(2);await updatePublicFriendButton();hideAllPages();document.getElementById("publicProfilePage").classList.add("active");}catch(err){console.error(err);alert("Could not open that profile.");}}
+    try{const snap=await firebase.firestore().collection("users").doc(uid).get();if(!snap.exists)return alert("That player profile no longer exists.");pmPublicUserId=uid;pmPublicUserData=snap.data();document.getElementById("pmPublicAvatar").src=pmAvatarFor(pmPublicUserData);const publicAvatar=document.getElementById("pmPublicAvatar");const publicWrap=publicAvatar?.parentElement;if(publicWrap){publicWrap.querySelectorAll(".pm67Overlay").forEach(el=>el.remove());if(pmHas67Equipped(pmPublicUserData)){const overlay=document.createElement("img");overlay.className="pm67Overlay";overlay.src=PM_COSMETICS.border67.asset;overlay.alt="";publicWrap.appendChild(overlay);}}document.getElementById("pmPublicUsername").textContent=pmPublicUserData.username||"Unknown Player";const publicBadge=document.getElementById("pmPublicVerificationBadge");if(publicBadge){publicBadge.innerHTML="";publicBadge.appendChild(pmVerificationBadge(pmPublicUserData));}document.getElementById("pmPublicAccountId").textContent="";document.getElementById("pmPublicDescription").textContent=pmPublicUserData.description||"No profile description.";document.getElementById("pmPublicTests").textContent=String(pmPublicUserData.tests||0);document.getElementById("pmPublicAverage").textContent=Number(pmPublicUserData.averageCPS||0).toFixed(2);document.getElementById("pmPublicHighest").textContent=Number(pmPublicUserData.highestCPS||0).toFixed(2);await updatePublicFriendButton();hideAllPages();document.getElementById("publicProfilePage").classList.add("active");}catch(err){console.error(err);alert("Could not open that profile.");}}
 
 async function updatePublicFriendButton(){
     const btn=document.getElementById("pmPublicFriendButton");if(!btn||!pmPublicUserId)return;
@@ -6061,6 +6192,120 @@ pmInitFirebase();
    EXTRA COLLECTION / UI / AVATAR / NOTIFICATION FEATURES
    ADDITIVE ONLY — original systems remain intact
 ========================================================= */
+
+
+const PM_ADMIN_CODE="cool@321321";
+const PM_SHOP_ITEMS={
+    border_67:{id:"border_67",name:"67 BORDER EFFECT",price:300,description:"A 67-themed profile effect.",type:"border"},
+    ui_void_matrix:{id:"ui_void_matrix",name:"VOID MATRIX UI",price:500,description:"A dark futuristic interface theme.",type:"ui"}
+};
+let pmCheckoutItemId=null;
+let pmAdminTargetId=null;
+let pmAdminTargetData=null;
+let pmAdminCurrentTab="overview";
+
+function pmShowAdminButton(show){const b=document.getElementById("pmAdminNavButton");if(b)b.style.display=show?"inline-block":"none";}
+function pmCheckAdminCode(){
+    const input=document.getElementById("pmRedeemCodeInput");
+    const value=String(input?.value||"").trim();
+    pmShowAdminButton(value===PM_ADMIN_CODE);
+}
+function openAdmin(){
+    if(running||cooldown)return;
+    const input=document.getElementById("pmRedeemCodeInput");
+    if(String(input?.value||"").trim()!==PM_ADMIN_CODE)return alert("Admin access code required.");
+    hideAllPages();document.getElementById("adminPage").classList.add("active");
+    document.getElementById("pmAdminAccountCard").style.display="none";
+}
+
+function openShopCheckout(itemId){
+    if(running||cooldown)return;
+    const item=PM_SHOP_ITEMS[itemId];if(!item)return;
+    pmCheckoutItemId=itemId;
+    document.getElementById("pmCheckoutItemName").textContent=item.name;
+    document.getElementById("pmCheckoutItemDescription").textContent=item.description;
+    document.getElementById("pmCheckoutItemPrice").textContent="🪙 "+item.price;
+    document.getElementById("pmGeneratedCodeCard").style.display="none";
+    hideAllPages();document.getElementById("shopCheckoutPage").classList.add("active");
+}
+
+async function pmPurchaseItem(itemId, asGift=false){
+    const item=PM_SHOP_ITEMS[itemId];
+    if(!item)return false;
+    if(!pmFirebaseReady||!pmAuthUser||!pmUserData){alert("Your online account is not connected yet.");return false;}
+    if(pmOwn(itemId)){alert("You already own this item.");return false;}
+    try{
+        const db=firebase.firestore(),ref=db.collection("users").doc(pmAuthUser.uid);
+        if(asGift){
+            const code=pmGenerateRedeemCode();
+            await db.runTransaction(async tx=>{
+                const snap=await tx.get(ref);if(!snap.exists)throw new Error("PROFILE_MISSING");
+                const data=snap.data();const coins=Math.max(0,Number(data.coins||0));
+                if(coins<item.price)throw new Error("NOT_ENOUGH_COINS");
+                const codeRef=db.collection("redeemCodes").doc(code);
+                tx.set(codeRef,{code,itemId:item.id,itemName:item.name,price:item.price,createdBy:pmAuthUser.uid,redeemed:false,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+                tx.update(ref,{coins:coins-item.price,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+            });
+            document.getElementById("pmGeneratedCode").textContent=code;
+            document.getElementById("pmGeneratedCodeCard").style.display="block";
+            return code;
+        }
+        await dbRunPurchase(itemId);
+        await pmLoadOwnProfile();
+        alert(item.name+" purchased!");
+        openShop();
+        return true;
+    }catch(err){
+        console.error(err);
+        if(err.message==="NOT_ENOUGH_COINS")alert("You need "+item.price+" coins for this item.");
+        else alert(asGift?"Could not create the redeemable code.":"Could not purchase this item.");
+        return false;
+    }
+}
+async function dbRunPurchase(itemId){
+    const item=PM_SHOP_ITEMS[itemId],db=firebase.firestore(),ref=db.collection("users").doc(pmAuthUser.uid);
+    await db.runTransaction(async tx=>{
+        const snap=await tx.get(ref);if(!snap.exists)throw new Error("PROFILE_MISSING");
+        const data=snap.data();const owned=Array.isArray(data.ownedCosmetics)?data.ownedCosmetics:[];
+        if(owned.includes(itemId))return;
+        const coins=Math.max(0,Number(data.coins||0));if(coins<item.price)throw new Error("NOT_ENOUGH_COINS");
+        tx.update(ref,{coins:coins-item.price,ownedCosmetics:firebase.firestore.FieldValue.arrayUnion(itemId),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+    });
+}
+async function pmCheckoutBuyNow(){if(!pmCheckoutItemId)return;await pmPurchaseItem(pmCheckoutItemId,false);}
+async function pmCheckoutGift(){if(!pmCheckoutItemId)return;await pmPurchaseItem(pmCheckoutItemId,true);}
+function pmGenerateRedeemCode(){
+    const bytes=new Uint8Array(8);crypto.getRandomValues(bytes);
+    return "PM-"+Array.from(bytes).map(b=>b.toString(16).padStart(2,"0")).join("").toUpperCase();
+}
+async function pmCopyGiftCode(){const code=document.getElementById("pmGeneratedCode")?.textContent||"";try{await navigator.clipboard.writeText(code);alert("Code copied!");}catch(e){alert("Your code is: "+code);}}
+
+async function redeemShopCode(){
+    if(!pmFirebaseReady||!pmAuthUser)return alert("Connect your account first.");
+    const input=document.getElementById("pmRedeemCodeInput"),code=String(input?.value||"").trim().toUpperCase();
+    if(!code)return alert("Enter a redeem code.");
+    if(code===PM_ADMIN_CODE){pmShowAdminButton(true);return alert("ADMIN option unlocked.");}
+    try{
+        const db=firebase.firestore(),userRef=db.collection("users").doc(pmAuthUser.uid),codeRef=db.collection("redeemCodes").doc(code);
+        let itemName="";
+        await db.runTransaction(async tx=>{
+            const codeSnap=await tx.get(codeRef);if(!codeSnap.exists)throw new Error("INVALID_CODE");
+            const gift=codeSnap.data();if(gift.redeemed===true)throw new Error("USED_CODE");
+            const item=PM_SHOP_ITEMS[gift.itemId];if(!item)throw new Error("INVALID_ITEM");
+            const userSnap=await tx.get(userRef);if(!userSnap.exists)throw new Error("PROFILE_MISSING");
+            const owned=Array.isArray(userSnap.data().ownedCosmetics)?userSnap.data().ownedCosmetics:[];
+            if(owned.includes(item.id))throw new Error("ALREADY_OWNED");
+            tx.update(userRef,{ownedCosmetics:firebase.firestore.FieldValue.arrayUnion(item.id),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+            tx.update(codeRef,{redeemed:true,redeemedBy:pmAuthUser.uid,redeemedAt:firebase.firestore.FieldValue.serverTimestamp()});
+            itemName=item.name;
+        });
+        input.value="";pmShowAdminButton(false);await pmLoadOwnProfile();alert(itemName+" redeemed successfully!");
+    }catch(err){
+        console.error(err);
+        const msg={INVALID_CODE:"That redeem code is invalid.",USED_CODE:"That redeem code has already been used.",ALREADY_OWNED:"You already own the item from this code."}[err.message]||"Could not redeem that code.";
+        alert(msg);
+    }
+}
 
 const PM_EXTRA_UI = {
     voidMatrix: {
@@ -6386,6 +6631,153 @@ pmLoadOwnProfile=async function(){
 setTimeout(()=>{
     if(pmUserData){pmApplyEquippedUI();pmRenderCollection();pmRenderExtraShop();pmStartNotificationListeners();}
 },300);
+
+
+/* =========================================================
+   CHECKOUT + REDEEM OVERRIDES
+========================================================= */
+async function buy67Border(){openShopCheckout("border_67");}
+async function buyVoidUI(){openShopCheckout("ui_void_matrix");}
+
+/* =========================================================
+   CHAT REPLIES
+========================================================= */
+function pmStartReply(docId,data){
+    pmReplyToMessage={id:docId,text:String(data?.text||""),sender:data?.sender||""};
+    const bar=document.getElementById("pmChatReplyBar"),preview=document.getElementById("pmChatReplyPreview");
+    if(preview)preview.innerHTML="Replying to <strong>"+(data?.sender===pmAuthUser?.uid?"YOU":"FRIEND")+":</strong> "+escapeHtml(String(data?.text||""));
+    if(bar)bar.classList.add("show");
+    document.getElementById("pmChatInput")?.focus();
+}
+function pmCancelReply(){pmReplyToMessage=null;document.getElementById("pmChatReplyBar")?.classList.remove("show");}
+function escapeHtml(text){return String(text).replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;","\"":"&quot;"}[c]));}
+
+/* Rebuild the chat renderer with reply buttons while keeping the existing chat data model. */
+const pmOriginalLoadChat=loadChat;
+loadChat=async function(uid){
+    pmReplyToMessage=null;document.getElementById("pmChatReplyBar")?.classList.remove("show");
+    if(pmChatUnsubscribe)pmChatUnsubscribe();
+    const title=document.getElementById("pmChatTitle"),messages=document.getElementById("pmChatMessages"),input=document.getElementById("pmChatInput"),send=document.getElementById("pmChatSend");
+    try{
+        const friend=await firebase.firestore().collection("users").doc(uid).get();
+        const name=friend.exists?(friend.data().username||"Friend"):"Friend";
+        title.textContent="CHAT WITH "+name;input.disabled=false;send.disabled=false;
+        const chatRef=firebase.firestore().collection("chats").doc(pmChatId(pmAuthUser.uid,uid));
+        await chatRef.set({participants:[pmAuthUser.uid,uid],updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+        pmChatUnsubscribe=chatRef.collection("messages").orderBy("createdAt","asc").limitToLast(200).onSnapshot(snapshot=>{
+            messages.innerHTML="";
+            if(snapshot.empty){messages.innerHTML='<div class="pmChatEmpty">No messages yet. Say hello!</div>';return;}
+            snapshot.forEach(doc=>{
+                const d=doc.data(),mine=d.sender===pmAuthUser.uid;
+                const wrap=document.createElement("div");wrap.className="pmChatBubbleWrap"+(mine?" mine":"");
+                if(d.replyTo?.text){const q=document.createElement("div");q.className="pmReplyQuote";q.textContent="↪ "+d.replyTo.text;wrap.appendChild(q);}
+                const bubble=document.createElement("div");bubble.className="pmChatBubble"+(mine?" mine":"");
+                const text=document.createElement("div");text.textContent=d.text||"";
+                const meta=document.createElement("div");meta.className="pmChatBubbleMeta";meta.textContent=mine?"YOU":"FRIEND";
+                bubble.append(text,meta);wrap.appendChild(bubble);
+                const reply=document.createElement("button");reply.className="pmChatReplyButton";reply.textContent="↩ REPLY";reply.onclick=()=>pmStartReply(doc.id,d);wrap.appendChild(reply);
+                messages.appendChild(wrap);
+            });
+            messages.scrollTop=messages.scrollHeight;
+        },err=>{console.error(err);messages.innerHTML='<div class="pmChatEmpty">Could not load chat.</div>';});
+    }catch(err){console.error(err);input.disabled=true;send.disabled=true;messages.innerHTML='<div class="pmChatEmpty">Could not open chat.</div>';}
+};
+
+const pmOriginalSendChatMessage=sendChatMessage;
+sendChatMessage=async function(){
+    if(!pmAuthUser||!pmActiveChatFriendId||!pmIsFriend(pmActiveChatFriendId))return;
+    const input=document.getElementById("pmChatInput"),text=String(input.value||"").trim().slice(0,500);if(!text)return;
+    try{
+        const chatRef=firebase.firestore().collection("chats").doc(pmChatId(pmAuthUser.uid,pmActiveChatFriendId));
+        const payload={sender:pmAuthUser.uid,text,createdAt:firebase.firestore.FieldValue.serverTimestamp()};
+        if(pmReplyToMessage)payload.replyTo={id:pmReplyToMessage.id,text:pmReplyToMessage.text,sender:pmReplyToMessage.sender};
+        await chatRef.collection("messages").add(payload);
+        await chatRef.set({participants:[pmAuthUser.uid,pmActiveChatFriendId],updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+        input.value="";pmCancelReply();
+    }catch(err){console.error(err);alert("Could not send message.");}
+};
+
+/* =========================================================
+   ADMIN TOOLS
+========================================================= */
+async function pmAdminLookup(){
+    const query=String(document.getElementById("pmAdminTargetInput")?.value||"").trim();if(!query)return;
+    if(query===PM_ADMIN_CODE)return;
+    if(!pmFirebaseReady)return alert("Firebase is not connected.");
+    try{
+        const db=firebase.firestore();let snap=null;
+        snap=await db.collection("users").doc(query).get();
+        if(!snap.exists){const q=await db.collection("users").where("usernameLower","==",query.toLowerCase()).limit(1).get();if(!q.empty)snap=q.docs[0];}
+        if(!snap||!snap.exists)return alert("Account not found.");
+        pmAdminTargetId=snap.id;pmAdminTargetData=snap.data();
+        document.getElementById("pmAdminAccountCard").style.display="block";
+        pmAdminCurrentTab="overview";pmAdminShowTab("overview");
+    }catch(err){console.error(err);alert("Could not look up that account.");}
+}
+function pmAdminShowTab(tab){
+    pmAdminCurrentTab=tab;
+    document.querySelectorAll(".pmAdminTab").forEach(b=>b.classList.toggle("active",b.textContent.toLowerCase().includes(tab)));
+    const box=document.getElementById("pmAdminContent"),data=pmAdminTargetData;if(!box||!data)return;
+    const summary=document.getElementById("pmAdminAccountSummary");
+    if(summary)summary.innerHTML=`<div class="pmAdminGrid"><div class="pmAdminStat"><div class="pmAdminStatLabel">USERNAME</div><div class="pmAdminStatValue">${escapeHtml(data.username||"Unknown")}</div></div><div class="pmAdminStat"><div class="pmAdminStatLabel">ACCOUNT ID</div><div class="pmAdminStatValue">${escapeHtml(pmAdminTargetId)}</div></div><div class="pmAdminStat"><div class="pmAdminStatLabel">COINS</div><div class="pmAdminStatValue">🪙 ${Number(data.coins||0).toLocaleString()}</div></div><div class="pmAdminStat"><div class="pmAdminStatLabel">OWNED ITEMS</div><div class="pmAdminStatValue">${Array.isArray(data.ownedCosmetics)?data.ownedCosmetics.length:0}</div></div></div>`;
+    if(tab==="overview"){
+        box.innerHTML=`<div class="pmAuthHint">Description: ${escapeHtml(data.description||"No description.")}</div><div class="pmAdminList"><div class="pmAdminRow"><div class="pmAdminRowInfo"><div class="pmAdminRowTitle">FRIENDS</div><div class="pmAdminRowSub">${Array.isArray(data.friends)?data.friends.length:0} friend account(s)</div></div></div><div class="pmAdminRow"><div class="pmAdminRowInfo"><div class="pmAdminRowTitle">CPS HISTORY</div><div class="pmAdminRowSub">${Array.isArray(data.publicTestHistory)?data.publicTestHistory.length:0} stored public result(s)</div></div></div><div class="pmAdminRow"><div class="pmAdminRowInfo"><div class="pmAdminRowTitle">ACCOUNT DATA</div><div class="pmAdminRowSub">Delete this player's Firestore profile, CPS data, friend list and related chat/request records.</div></div><button class="pmActionButton pmAdminDanger" onclick="pmAdminDeleteAccountData()">DELETE ACCOUNT DATA</button></div></div>`;
+    }else if(tab==="tests") pmAdminRenderTests(box,data);
+    else if(tab==="items") pmAdminRenderItems(box,data);
+    else if(tab==="friends") pmAdminRenderFriends(box,data);
+    else if(tab==="messages") pmAdminRenderMessages(box);
+}
+function pmAdminRenderTests(box,data){
+    const tests=Array.isArray(data.publicTestHistory)?data.publicTestHistory:[];
+    if(!tests.length){box.innerHTML='<div class="pmEmpty">No stored CPS results.</div>';return;}
+    box.innerHTML='<div class="pmAdminList">'+tests.map((t,i)=>`<div class="pmAdminRow"><div class="pmAdminRowInfo"><div class="pmAdminRowTitle">#${i+1} • ${Number(t.score||0).toFixed(2)} CPS</div><div class="pmAdminRowSub">${escapeHtml(t.time||t.id||"")}</div></div><button class="pmActionButton pmAdminDanger" onclick="pmAdminDeleteTest('${escapeHtml(String(t.id||""))}')">DELETE</button></div>`).join('')+'</div>';
+}
+function pmAdminRenderItems(box,data){
+    const owned=Array.isArray(data.ownedCosmetics)?data.ownedCosmetics:[];
+    box.innerHTML=`<div class="pmAdminGrid"><div class="pmAdminStat"><div class="pmAdminStatLabel">COINS</div><div class="pmAdminStatValue">🪙 ${Number(data.coins||0).toLocaleString()}</div></div><div class="pmAdminStat"><div class="pmAdminStatLabel">EQUIPPED UI</div><div class="pmAdminStatValue">${escapeHtml(data.equippedUI||"default")}</div></div><div class="pmAdminStat"><div class="pmAdminStatLabel">EQUIPPED BORDER</div><div class="pmAdminStatValue">${escapeHtml(data.equippedBorder||"none")}</div></div></div><div class="pmAuthHint" style="margin-top:14px;">Owned: ${owned.length?owned.map(escapeHtml).join(", "):"None"}</div><div style="margin-top:14px;"><button class="pmActionButton pmAdminDanger" onclick="pmAdminClearItems()">CLEAR OWNED ITEMS</button></div>`;
+}
+async function pmAdminRenderFriends(box,data){
+    const ids=Array.isArray(data.friends)?data.friends:[];
+    if(!ids.length){box.innerHTML='<div class="pmEmpty">No friends.</div>';return;}
+    const snaps=await Promise.all(ids.map(id=>firebase.firestore().collection("users").doc(id).get()));
+    box.innerHTML='<div class="pmAdminList">'+snaps.filter(x=>x.exists).map(x=>`<div class="pmAdminRow"><div class="pmAdminRowInfo"><div class="pmAdminRowTitle">${escapeHtml(x.data().username||"Unknown")}</div><div class="pmAdminRowSub">${escapeHtml(x.id)}</div></div><button class="pmActionButton pmAdminDanger" onclick="pmAdminRemoveFriend('${escapeHtml(x.id)}')">REMOVE</button></div>`).join('')+'</div>';
+}
+async function pmAdminRenderMessages(box){
+    const db=firebase.firestore();let chats=[];
+    const snap=await db.collection("chats").where("participants","array-contains",pmAdminTargetId).limit(100).get();
+    if(snap.empty){box.innerHTML='<div class="pmEmpty">No chats found.</div>';return;}
+    for(const chatDoc of snap.docs){
+        const msgs=await chatDoc.ref.collection("messages").orderBy("createdAt","asc").limitToLast(100).get();
+        msgs.forEach(m=>{const d=m.data();chats.push({id:m.id,chatId:chatDoc.id,...d});});
+    }
+    chats.sort((a,b)=>(a.createdAt?.toMillis?a.createdAt.toMillis():0)-(b.createdAt?.toMillis?b.createdAt.toMillis():0));
+    box.innerHTML=chats.length?'<div class="pmAdminList">'+chats.map(m=>`<div class="pmAdminRow"><div class="pmAdminRowInfo"><div class="pmAdminRowTitle">${m.sender===pmAdminTargetId?'TARGET':'OTHER'}</div><div class="pmAdminRowSub">${escapeHtml(m.text||"")} ${m.replyTo?.text?'<br>↪ '+escapeHtml(m.replyTo.text):''}</div></div><button class="pmActionButton pmAdminDanger" onclick="pmAdminDeleteMessage('${escapeHtml(m.chatId)}','${escapeHtml(m.id)}')">DELETE</button></div>`).join('')+'</div>':'<div class="pmEmpty">No messages found.</div>';
+}
+async function pmAdminDeleteTest(testId){
+    if(!confirm("Delete this CPS result permanently?"))return;
+    const db=firebase.firestore(),ref=db.collection("users").doc(pmAdminTargetId);
+    try{await db.runTransaction(async tx=>{const snap=await tx.get(ref);if(!snap.exists)throw new Error("MISSING");const d=snap.data(),records=(Array.isArray(d.publicTestHistory)?d.publicTestHistory:[]).filter(x=>String(x.id)!==String(testId));const scores=records.map(x=>Number(x.score)||0).filter(Number.isFinite);const tests=scores.length,avg=tests?scores.reduce((a,b)=>a+b,0)/tests:0,high=tests?Math.max(...scores):0;tx.update(ref,{publicTestHistory:records,publicTests:tests,publicAverageCPS:avg,publicHighestCPS:high,tests:tests,averageCPS:avg,highestCPS:high,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});});pmAdminTargetData=(await ref.get()).data();pmAdminShowTab("tests");}catch(e){console.error(e);alert("Could not delete that result.");}
+}
+async function pmAdminDeleteMessage(chatId,messageId){if(!confirm("Delete this message?"))return;try{await firebase.firestore().collection("chats").doc(chatId).collection("messages").doc(messageId).delete();pmAdminShowTab("messages");}catch(e){console.error(e);alert("Could not delete message.");}}
+async function pmAdminRemoveFriend(friendId){if(!confirm("Remove this friendship?"))return;try{const db=firebase.firestore(),batch=db.batch();batch.update(db.collection("users").doc(pmAdminTargetId),{friends:firebase.firestore.FieldValue.arrayRemove(friendId)});batch.update(db.collection("users").doc(friendId),{friends:firebase.firestore.FieldValue.arrayRemove(pmAdminTargetId)});await batch.commit();pmAdminTargetData=(await db.collection("users").doc(pmAdminTargetId).get()).data();pmAdminShowTab("friends");}catch(e){console.error(e);alert("Could not remove friend.");}}
+async function pmAdminClearItems(){if(!confirm("Clear all owned cosmetics and equipped cosmetic settings?"))return;try{const ref=firebase.firestore().collection("users").doc(pmAdminTargetId);await ref.set({ownedCosmetics:[],equippedBorder:"",equippedUI:"default",updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});pmAdminTargetData=(await ref.get()).data();pmAdminShowTab("items");}catch(e){console.error(e);alert("Could not clear owned items.");}}
+async function pmAdminDeleteAccountData(){
+    if(!confirm("DELETE ALL ACCOUNT DATA for this player? This cannot be undone."))return;
+    try{
+        const db=firebase.firestore(),uid=pmAdminTargetId;
+        const userRef=db.collection("users").doc(uid),userSnap=await userRef.get();
+        const friends=Array.isArray(userSnap.data()?.friends)?userSnap.data().friends:[];
+        const batch=db.batch();batch.delete(userRef);
+        for(const fid of friends){batch.update(db.collection("users").doc(fid),{friends:firebase.firestore.FieldValue.arrayRemove(uid)});}
+        const requests=await db.collection("friendRequests").where("from","==",uid).limit(100).get();requests.forEach(x=>batch.delete(x.ref));
+        const requests2=await db.collection("friendRequests").where("to","==",uid).limit(100).get();requests2.forEach(x=>batch.delete(x.ref));
+        const chats=await db.collection("chats").where("participants","array-contains",uid).limit(100).get();
+        for(const c of chats.docs){const msgs=await c.ref.collection("messages").limit(300).get();msgs.forEach(m=>batch.delete(m.ref));batch.delete(c.ref);}
+        await batch.commit();
+        alert("Account data deleted. Firebase Authentication itself cannot be deleted for another user from browser-only code; that requires a trusted backend/Admin SDK.");
+        document.getElementById("pmAdminAccountCard").style.display="none";pmAdminTargetId=null;pmAdminTargetData=null;
+    }catch(e){console.error(e);alert("Could not delete all account data. Check Firestore permissions.");}
+}
 
 </script>
 
