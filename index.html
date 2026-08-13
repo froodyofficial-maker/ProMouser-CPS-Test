@@ -2019,6 +2019,28 @@ body.neonPulse .pmAdminTab.active,body.neonPulse .pmAdminTab:hover,body.neonPuls
 body.neonPulse .pmReplyQuote{border-left-color:#00e5ff;}
 @media(max-width:700px){.pmCheckoutActions{grid-template-columns:1fr;}.pmRedeemBox,.pmAdminTarget{grid-template-columns:1fr;}.pmCheckoutItem{align-items:flex-start;flex-direction:column;}.pmChatBubbleWrap{max-width:92%;}}
 
+
+/* FINAL FIX — keep public profile effects inside the avatar stage and never over the username */
+.pmPublicTop{position:relative;}
+.pmPublicTop > .pmPublicAvatarStage{position:relative;width:145px;height:145px;flex:0 0 145px;z-index:1;}
+.pmPublicTop > .pmPublicAvatarStage .pmPublicAvatar{position:absolute;width:115px;height:115px;left:15px;top:15px;z-index:1;}
+.pmPublicTop > .pmPublicAvatarStage .pm67Overlay{position:absolute;inset:0;width:145px;height:145px;z-index:2;pointer-events:none;object-fit:contain;}
+.pmPublicTop > div:not(.pmPublicAvatarStage){position:relative;z-index:10;min-width:0;flex:1;}
+.pmPublicUsername{position:relative;z-index:11;isolation:isolate;}
+.pmAdminUnlockCard{margin-top:14px;border:1px solid #5b4210;background:#080705;border-radius:12px;padding:14px;display:none;}
+.pmAdminUnlockCard.show{display:block;}
+.pmAdminUnlockCard .pmActionButton{margin-top:10px;}
+.pmCheckoutChoiceGrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px;}
+.pmCheckoutChoice{padding:20px;border:1px solid #451313;border-radius:12px;background:#080808;text-align:left;cursor:pointer;transition:.2s;}
+.pmCheckoutChoice:hover{border-color:#ff1717;box-shadow:0 0 18px rgba(255,0,0,.15);transform:translateY(-2px);}
+.pmCheckoutChoice h3{font-size:17px;margin-bottom:7px;}
+.pmCheckoutChoice p{color:#777;font-size:11px;line-height:1.5;}
+.pmCheckoutChoice .pmActionButton{width:100%;margin-top:14px;}
+body.neonPulse .pmAdminUnlockCard{border-color:#07515e;background:#050d11;}
+body.neonPulse .pmCheckoutChoice{border-color:#07515e;background:#050d11;}
+body.neonPulse .pmCheckoutChoice:hover{border-color:#00e5ff;box-shadow:0 0 18px rgba(0,229,255,.14);}
+@media(max-width:700px){.pmCheckoutChoiceGrid{grid-template-columns:1fr;}.pmPublicTop > .pmPublicAvatarStage{width:130px;height:130px;flex-basis:130px;}.pmPublicTop > .pmPublicAvatarStage .pmPublicAvatar{width:105px;height:105px;left:12.5px;top:12.5px}.pmPublicTop > .pmPublicAvatarStage .pm67Overlay{width:130px;height:130px;}}
+
 </style>
 
 <!-- ProMouser Global Features — Firebase SDKs -->
@@ -2449,6 +2471,11 @@ body.neonPulse .pmReplyQuote{border-left-color:#00e5ff;}
         <button class="pmActionButton" onclick="redeemShopCode()">REDEEM</button>
     </div>
     <div class="pmRedeemHint">Gift codes are single-use. Redeeming a code permanently adds that item to your account.</div>
+    <div id="pmAdminUnlockCard" class="pmAdminUnlockCard">
+        <div class="pmSmallLabel">ADMIN ACCESS UNLOCKED</div>
+        <div class="pmAuthHint" style="margin:6px 0 0;">Admin tools are now available for this session.</div>
+        <button class="pmActionButton" onclick="openAdmin()">🛡 OPEN ADMIN OPTIONS</button>
+    </div>
 </div>
 
 <div class="pmShopGrid">
@@ -2509,10 +2536,18 @@ body.neonPulse .pmReplyQuote{border-left-color:#00e5ff;}
                 <div><div class="pmCheckoutItemTitle" id="pmCheckoutItemName">ITEM</div><div class="pmCheckoutItemSub" id="pmCheckoutItemDescription"></div></div>
                 <div class="pmCheckoutPrice" id="pmCheckoutItemPrice">🪙 0</div>
             </div>
-            <div class="pmAuthHint">Choose how you want to receive it.</div>
-            <div class="pmCheckoutActions">
-                <button class="pmActionButton" onclick="pmCheckoutBuyNow()">BUY NOW</button>
-                <button class="pmActionButton pmSecondaryButton" onclick="pmCheckoutGift()">GIVE REDEEMABLE CODE</button>
+            <div class="pmAuthHint">Choose one option below. Both options charge the item price shown above.</div>
+            <div class="pmCheckoutChoiceGrid">
+                <div class="pmCheckoutChoice" onclick="pmCheckoutBuyNow()">
+                    <h3>🛒 BUY NOW</h3>
+                    <p>Purchase the item directly and add it to your own account.</p>
+                    <button class="pmActionButton" onclick="event.stopPropagation();pmCheckoutBuyNow()">BUY FOR ME</button>
+                </div>
+                <div class="pmCheckoutChoice" onclick="pmCheckoutGift()">
+                    <h3>🎁 GIVE REDEEMABLE CODE</h3>
+                    <p>Pay for the item and generate a single-use code that another player can redeem.</p>
+                    <button class="pmActionButton pmSecondaryButton" onclick="event.stopPropagation();pmCheckoutGift()">GENERATE GIFT CODE</button>
+                </div>
             </div>
         </div>
         <div class="pmCheckoutCard" id="pmGeneratedCodeCard" style="display:none;">
@@ -2543,7 +2578,7 @@ body.neonPulse .pmReplyQuote{border-left-color:#00e5ff;}
                 <div class="pmPublicAvatarStage">
                     <img id="pmPublicAvatar" class="pmPublicAvatar" alt="Profile picture">
                 </div>
-                <div>
+                <div class="pmPublicIdentity">
                     <div class="pmPublicUsername" id="pmPublicUsername">PLAYER <span id="pmPublicVerificationBadge"></span></div>
                     <div class="pmAccountId" id="pmPublicAccountId"></div>
                     <div class="pmAuthHint" id="pmPublicDescription">No profile description.</div>
@@ -3761,305 +3796,47 @@ trackerSquare.addEventListener(
 ========================================================= */
 
 function detectAutoClicker(intervals) {
+    // Client-side detection is heuristic, so require several independent signals.
+    if(!Array.isArray(intervals) || intervals.length < 15) return false;
+    const clean=intervals.filter(v=>Number.isFinite(v)&&v>0&&v<2000);
+    if(clean.length<15) return false;
 
-    /*
-        Not enough data to make
-        a meaningful decision.
-    */
+    const sorted=[...clean].sort((a,b)=>a-b);
+    const median=sorted[Math.floor(sorted.length/2)];
+    const absDev=sorted.map(v=>Math.abs(v-median)).sort((a,b)=>a-b);
+    const mad=absDev[Math.floor(absDev.length/2)];
+    const robustCV=(1.4826*mad)/Math.max(median,0.001);
 
-    if (
-        intervals.length < 12
-    ) {
-
-        return false;
-
+    let near=0, exactRuns=0, run=0, quantized=0;
+    for(let i=0;i<clean.length;i++){
+        if(Math.abs(clean[i]-median)<=Math.max(1.5,median*0.015)) near++;
+        if(Math.abs(clean[i]-Math.round(clean[i]))<0.12) quantized++;
+        if(i>0 && Math.abs(clean[i]-clean[i-1])<=Math.max(2,median*0.02)){
+            run++; exactRuns=Math.max(exactRuns,run);
+        }else run=0;
     }
-
-
-    /*
-        Remove extreme first/last
-        timing anomalies.
-    */
-
-    const sorted =
-        [...intervals]
-        .sort(
-            (a,b) => a - b
-        );
-
-
-    const trim =
-        Math.floor(
-            sorted.length * 0.05
-        );
-
-
-    const trimmed =
-        sorted.slice(
-            trim,
-            sorted.length - trim
-        );
-
-
-    if (
-        trimmed.length < 8
-    ) {
-
-        return false;
-
-    }
-
-
-    /*
-        Average interval.
-    */
-
-    const average =
-        trimmed.reduce(
-            (a,b) => a + b,
-            0
-        ) / trimmed.length;
-
-
-    if (
-        average <= 0
-    ) {
-
-        return false;
-
-    }
-
-
-    /*
-        Standard deviation.
-    */
-
-    const variance =
-        trimmed.reduce(
-            (sum, value) =>
-                sum +
-                Math.pow(
-                    value - average,
-                    2
-                ),
-            0
-        ) / trimmed.length;
-
-
-    const standardDeviation =
-        Math.sqrt(variance);
-
-
-    const coefficient =
-        standardDeviation /
-        average;
-
-
-    /*
-        Signal 1:
-        Extremely low variation.
-    */
-
-    const extremelyRegular =
-        coefficient < 0.025;
-
-
-    /*
-        Signal 2:
-        How many intervals are
-        almost exactly the same.
-    */
-
-    let nearIdentical = 0;
-
-
-    for (
-        let i = 1;
-        i < trimmed.length;
-        i++
-    ) {
-
-        const difference =
-            Math.abs(
-                trimmed[i] -
-                trimmed[i - 1]
-            );
-
-
-        if (
-            difference <= 1.5
-        ) {
-
-            nearIdentical++;
-
-        }
-
-    }
-
-
-    const identicalRatio =
-        nearIdentical /
-        Math.max(
-            trimmed.length - 1,
-            1
-        );
-
-
-    /*
-        Signal 3:
-        Detect long runs where
-        consecutive intervals are
-        almost identical.
-    */
-
-    let longestRun = 0;
-
-    let currentRun = 0;
-
-
-    for (
-        let i = 1;
-        i < intervals.length;
-        i++
-    ) {
-
-        const difference =
-            Math.abs(
-                intervals[i] -
-                intervals[i - 1]
-            );
-
-
-        if (
-            difference <= 2
-        ) {
-
-            currentRun++;
-
-            longestRun =
-                Math.max(
-                    longestRun,
-                    currentRun
-                );
-
-        }
-
-        else {
-
-            currentRun = 0;
-
-        }
-
-    }
-
-
-    /*
-        Signal 4:
-        Autoclickers often have
-        intervals sitting on precise
-        timing increments.
-    */
-
-    let quantized = 0;
-
-
-    for (
-        const interval of trimmed
-    ) {
-
-        const rounded =
-            Math.round(
-                interval
-            );
-
-
-        if (
-            Math.abs(
-                interval - rounded
-            ) < 0.15
-        ) {
-
-            quantized++;
-
-        }
-
-    }
-
-
-    const quantizedRatio =
-        quantized /
-        trimmed.length;
-
-
-    /*
-        Build a suspicion score.
-
-        We don't accuse someone based
-        on one characteristic alone.
-    */
-
-    let suspicion = 0;
-
-
-    if (
-        extremelyRegular
-    ) {
-
-        suspicion += 3;
-
-    }
-
-
-    if (
-        coefficient < 0.05
-    ) {
-
-        suspicion += 2;
-
-    }
-
-
-    if (
-        identicalRatio > 0.75
-    ) {
-
-        suspicion += 2;
-
-    }
-
-
-    if (
-        longestRun >= 10
-    ) {
-
-        suspicion += 2;
-
-    }
-
-
-    if (
-        quantizedRatio > 0.92
-    ) {
-
-        suspicion += 1;
-
-    }
-
-
-    /*
-        Require multiple suspicious
-        signals before flagging.
-
-        Also require enough clicks.
-    */
-
-    return (
-        intervals.length >= 15 &&
-        suspicion >= 5
-    );
-
+    const nearRatio=near/clean.length;
+    const quantizedRatio=quantized/clean.length;
+
+    // Very fast, highly periodic streams are particularly strong evidence.
+    const veryFast=median<=85;
+    const ultraFast=median<=55;
+    const extremelyRegular=robustCV<=0.012;
+    const highlyRegular=robustCV<=0.025;
+    const periodicRun=exactRuns>=8;
+
+    let suspicion=0;
+    if(extremelyRegular) suspicion+=4;
+    else if(highlyRegular) suspicion+=2;
+    if(nearRatio>=0.88) suspicion+=3;
+    else if(nearRatio>=0.75) suspicion+=2;
+    if(periodicRun) suspicion+=3;
+    if(quantizedRatio>=0.90) suspicion+=1;
+    if(veryFast && highlyRegular) suspicion+=2;
+    if(ultraFast && nearRatio>=0.65) suspicion+=2;
+
+    return suspicion>=6;
 }
-
 
 /* =========================================================
    FINISH TEST
@@ -6204,7 +5981,14 @@ let pmAdminTargetId=null;
 let pmAdminTargetData=null;
 let pmAdminCurrentTab="overview";
 
-function pmShowAdminButton(show){const b=document.getElementById("pmAdminNavButton");if(b)b.style.display=show?"inline-block":"none";}
+let pmAdminUnlocked=false;
+function pmShowAdminButton(show){
+    pmAdminUnlocked=!!show;
+    const b=document.getElementById("pmAdminNavButton");
+    if(b)b.style.display=show?"inline-block":"none";
+    const card=document.getElementById("pmAdminUnlockCard");
+    if(card)card.classList.toggle("show",!!show);
+}
 function pmCheckAdminCode(){
     const input=document.getElementById("pmRedeemCodeInput");
     const value=String(input?.value||"").trim();
@@ -6213,7 +5997,9 @@ function pmCheckAdminCode(){
 function openAdmin(){
     if(running||cooldown)return;
     const input=document.getElementById("pmRedeemCodeInput");
-    if(String(input?.value||"").trim()!==PM_ADMIN_CODE)return alert("Admin access code required.");
+    const entered=String(input?.value||"").trim();
+    if(!pmAdminUnlocked && entered!==PM_ADMIN_CODE)return alert("Admin access code required.");
+    pmShowAdminButton(true);
     hideAllPages();document.getElementById("adminPage").classList.add("active");
     document.getElementById("pmAdminAccountCard").style.display="none";
 }
