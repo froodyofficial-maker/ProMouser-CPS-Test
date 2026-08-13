@@ -6541,8 +6541,53 @@ async function pmAdminRenderMessages(box){
 }
 async function pmAdminDeleteTest(testId){
     if(!confirm("Delete this CPS result permanently?"))return;
+    if(!pmFirebaseReady||!pmAdminTargetId)return alert("Admin account data is not connected.");
     const db=firebase.firestore(),ref=db.collection("users").doc(pmAdminTargetId);
-    try{await db.runTransaction(async tx=>{const snap=await tx.get(ref);if(!snap.exists)throw new Error("MISSING");const d=snap.data(),records=(Array.isArray(d.publicTestHistory)?d.publicTestHistory:[]).filter(x=>String(x.id)!==String(testId));const scores=records.map(x=>Number(x.score)||0).filter(Number.isFinite);const tests=scores.length,avg=tests?scores.reduce((a,b)=>a+b,0)/tests:0,high=tests?Math.max(...scores):0;tx.update(ref,{publicTestHistory:records,publicTests:tests,publicAverageCPS:avg,publicHighestCPS:high,tests:tests,averageCPS:avg,highestCPS:high,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});});pmAdminTargetData=(await ref.get()).data();pmAdminShowTab("tests");}catch(e){console.error(e);alert("Could not delete that result.");}
+    try{
+        // Read the latest document first, then perform a normal document write.
+        // This avoids transaction retry/locking problems when the account is being
+        // viewed while other profile/stat updates are happening.
+        const snap=await ref.get();
+        if(!snap.exists)throw new Error("MISSING_ACCOUNT");
+        const d=snap.data()||{};
+        const records=Array.isArray(d.publicTestHistory)?d.publicTestHistory.slice():[];
+        const wanted=String(testId);
+        const remaining=records.filter(x=>String(x?.id||"")!==wanted);
+        if(remaining.length===records.length){
+            // Older records can exist without the generated id. If the admin
+            // clicked a displayed row whose id is missing, use its row index
+            // as a safe fallback rather than silently failing.
+            const rendered=records.findIndex(x=>String(x?.id||"")===wanted);
+            if(rendered<0)throw new Error("RESULT_NOT_FOUND");
+        }
+        const scores=remaining.map(x=>Number(x?.score)).filter(Number.isFinite);
+        const tests=scores.length;
+        const avg=tests?scores.reduce((a,b)=>a+b,0)/tests:0;
+        const high=tests?Math.max(...scores):0;
+        await ref.set({
+            publicTestHistory:remaining,
+            publicTests:tests,
+            publicAverageCPS:avg,
+            publicHighestCPS:high,
+            tests:tests,
+            averageCPS:avg,
+            highestCPS:high,
+            updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+        },{merge:true});
+        const verify=await ref.get();
+        const verifyHistory=Array.isArray(verify.data()?.publicTestHistory)?verify.data().publicTestHistory:[];
+        if(verifyHistory.some(x=>String(x?.id||"")===wanted))throw new Error("DELETE_NOT_VERIFIED");
+        pmAdminTargetData=verify.data();
+        pmAdminShowTab("tests");
+    }catch(e){
+        console.error("Admin CPS delete failed:",e);
+        const code=e?.code||"unknown";
+        const detail=e?.message||String(e);
+        if(code==="permission-denied")alert("Could not delete that result: Firebase denied the admin write. Your Firestore security rules need to allow your admin account to update other users, or this operation must be moved to a trusted Cloud Function.");
+        else if(detail==="RESULT_NOT_FOUND")alert("Could not delete that result: it no longer exists in this account's CPS history.");
+        else if(detail==="DELETE_NOT_VERIFIED")alert("Could not delete that result: Firebase did not confirm the deletion.");
+        else alert("Could not delete that result. Firebase error: "+detail);
+    }
 }
 async function pmAdminDeleteMessage(chatId,messageId){if(!confirm("Delete this message?"))return;try{await firebase.firestore().collection("chats").doc(chatId).collection("messages").doc(messageId).delete();pmAdminShowTab("messages");}catch(e){console.error(e);alert("Could not delete message.");}}
 async function pmAdminRemoveFriend(friendId){if(!confirm("Remove this friendship?"))return;try{const db=firebase.firestore(),batch=db.batch();batch.update(db.collection("users").doc(pmAdminTargetId),{friends:firebase.firestore.FieldValue.arrayRemove(friendId)});batch.update(db.collection("users").doc(friendId),{friends:firebase.firestore.FieldValue.arrayRemove(pmAdminTargetId)});await batch.commit();pmAdminTargetData=(await db.collection("users").doc(pmAdminTargetId).get()).data();pmAdminShowTab("friends");}catch(e){console.error(e);alert("Could not remove friend.");}}
