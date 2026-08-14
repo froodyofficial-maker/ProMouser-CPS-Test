@@ -1876,8 +1876,8 @@ body.neonPulse .pmPublicUsername{color:#00e5ff;text-shadow:0 0 8px #00e5ff,0 0 2
 .pmChatSidebar > .pmChatFriendRow{flex:0 0 auto;min-width:190px;}
 .pmChatFriendRow{cursor:pointer;justify-content:flex-start;}
 .pmChatFriendRow.active{border-color:#df1010;box-shadow:0 0 12px rgba(255,0,0,.12);}
-.pmChatWindow{width:100%;min-height:620px;display:flex;flex-direction:column;}
-.pmChatMessages{height:560px;min-height:560px;flex:1;overflow-y:auto;padding:22px;display:flex;flex-direction:column;gap:11px;}
+.pmChatWindow{width:100%;height:min(720px,calc(100vh - 250px));min-height:420px;display:flex;flex-direction:column;overflow:hidden;}
+.pmChatMessages{height:auto;min-height:0;flex:1 1 auto;overflow-y:auto;overflow-x:hidden;padding:22px;display:flex;flex-direction:column;gap:11px;scrollbar-width:thin;scrollbar-color:#6f1b1b #050505;}
 .pmChatEmpty{height:100%;display:flex;align-items:center;justify-content:center;color:#666;text-align:center;font-size:14px;}
 .pmChatBubble{max-width:min(78%,760px);padding:11px 14px;border-radius:12px;background:#121212;border:1px solid #351313;align-self:flex-start;word-break:break-word;font-size:14px;line-height:1.4;}
 .pmChatBubble.mine{align-self:flex-end;background:#3a0808;border-color:#a10d0d;}
@@ -1887,7 +1887,7 @@ body.neonPulse .pmPublicUsername{color:#00e5ff;text-shadow:0 0 8px #00e5ff,0 0 2
 .pmChatComposer .pmActionButton{margin-top:0;min-width:80px;}
 .pmChatTitle{padding:16px 20px;border-bottom:1px solid #351313;font-weight:900;font-size:16px;min-height:52px;display:flex;align-items:center;}
 .pmChatUnread{font-size:10px;color:#ff5555;margin-left:auto;}
-@media(max-width:800px){.pmAuthGrid{grid-template-columns:1fr;}.pmChatSidebar{min-height:64px;}.pmChatSidebar > .pmChatFriendRow{min-width:165px;}.pmChatWindow{min-height:500px;}.pmChatMessages{height:410px;min-height:410px;padding:14px;}.pmChatBubble{max-width:88%;}}
+@media(max-width:800px){.pmAuthGrid{grid-template-columns:1fr;}.pmChatSidebar{min-height:64px;}.pmChatSidebar > .pmChatFriendRow{min-width:165px;}.pmChatWindow{height:calc(100vh - 230px);min-height:380px;max-height:620px;}.pmChatMessages{height:auto;min-height:0;padding:14px;}.pmChatBubble{max-width:88%;}}
 
 
 /* =========================================================
@@ -2586,7 +2586,7 @@ body.voidMatrix .applyTimeButton{background:#c66cff!important;border-color:#c66c
                     <div class="pmSmallLabel">USERNAME <span id="pmOwnVerificationBadge"></span></div>
                     <input id="pmUsernameInput" class="pmTextInput" maxlength="20" placeholder="Username">
                     <textarea id="pmDescriptionInput" class="pmTextInput pmDescriptionInput" maxlength="240" placeholder="Write a short profile description..."></textarea>
-                    <button class="pmActionButton" onclick="saveProfile()">SAVE PROFILE</button>
+                    <button class="pmActionButton" id="pmSaveProfileButton" onclick="saveProfile()" style="display:none;">SAVE PROFILE</button>
                     <div class="pmAccountId" id="pmAccountId"></div>
                 </div>
             </div>
@@ -7692,8 +7692,6 @@ pmAdminShowTab=async function(tab){
 };
 </script>
 
-</body>
-</html>
 
 <style>
 /* v16 — presence + typing */
@@ -7972,6 +7970,7 @@ setTimeout(()=>{if(pmAuthUser)pmStartPresence();},1200);
 setInterval(()=>{if(pmAuthUser&&pmFirebaseReady)pmStartPresence();},30000);
 </script>
 
+<script>
 /* FINAL V19 SHOP GIFT-CODE RULES */
 (function(){
     const baseSync = typeof pmV6SyncShopPrices === 'function' ? pmV6SyncShopPrices : null;
@@ -7993,3 +7992,86 @@ setInterval(()=>{if(pmAuthUser&&pmFirebaseReady)pmStartPresence();},30000);
         };
     }
 })();
+</script>
+
+<script>
+/* =========================================================
+   v21 — PROFILE DIRTY STATE
+   SAVE PROFILE only appears when the user has actually changed
+   their username or description.
+========================================================= */
+(function(){
+    let baseline = {username:"", description:""};
+    let wired = false;
+
+    function getFields(){
+        return {
+            username: String(document.getElementById("pmUsernameInput")?.value || "").trim(),
+            description: String(document.getElementById("pmDescriptionInput")?.value || "")
+        };
+    }
+
+    function updateSaveButton(){
+        const btn = document.getElementById("pmSaveProfileButton");
+        if(!btn) return;
+        const current = getFields();
+        const dirty = current.username !== baseline.username ||
+                      current.description !== baseline.description;
+        btn.style.display = dirty ? "inline-flex" : "none";
+        btn.disabled = !dirty;
+    }
+
+    function setBaselineFromCurrent(){
+        baseline = getFields();
+        updateSaveButton();
+    }
+
+    function wire(){
+        const username = document.getElementById("pmUsernameInput");
+        const description = document.getElementById("pmDescriptionInput");
+        if(!username || !description) return;
+
+        if(!wired){
+            username.addEventListener("input", updateSaveButton);
+            description.addEventListener("input", updateSaveButton);
+            wired = true;
+        }
+        updateSaveButton();
+    }
+
+    // Existing profile renderer populates the fields from Firebase.
+    // After that happens, those values become the clean baseline.
+    if(typeof renderOwnProfile === "function"){
+        const oldRenderOwnProfile = renderOwnProfile;
+        renderOwnProfile = function(){
+            const result = oldRenderOwnProfile.apply(this, arguments);
+            setTimeout(setBaselineFromCurrent, 0);
+            return result;
+        };
+    }
+
+    // Also catch the initial page/profile render.
+    const oldOpenProfile = window.openProfile;
+    if(typeof oldOpenProfile === "function"){
+        window.openProfile = function(){
+            const result = oldOpenProfile.apply(this, arguments);
+            setTimeout(wire, 150);
+            return result;
+        };
+    }
+
+    // Keep the button hidden until fields are ready.
+    setInterval(function(){
+        const u = document.getElementById("pmUsernameInput");
+        const d = document.getElementById("pmDescriptionInput");
+        const b = document.getElementById("pmSaveProfileButton");
+        if(u && d && b) wire();
+    }, 500);
+
+    // After a successful save, the existing saveProfile() reloads the profile,
+    // which invokes the renderer above and resets the clean baseline.
+})();
+</script>
+
+</body>
+</html>
