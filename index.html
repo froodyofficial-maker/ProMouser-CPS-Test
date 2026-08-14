@@ -1869,22 +1869,25 @@ body.neonPulse .pmPublicUsername{color:#00e5ff;text-shadow:0 0 8px #00e5ff,0 0 2
 .pmChatFriendAvatarStage .pm67Overlay{position:absolute;inset:0;width:40px;height:40px;object-fit:fill;z-index:2;pointer-events:none;}
 .pmRequestActions{display:flex;gap:7px;flex-wrap:wrap;}
 .pmRequestActions .pmActionButton{margin-top:0;}
-.pmChatLayout{display:grid;grid-template-columns:280px 1fr;gap:18px;}
+.pmChatLayout{display:flex;flex-direction:column;gap:14px;width:100%;}
 .pmChatSidebar,.pmChatWindow{background:#050505;border:1px solid #451313;border-radius:14px;overflow:hidden;}
-.pmChatSidebar{padding:10px;display:flex;flex-direction:column;gap:8px;}
+/* Chat contacts/options live above the conversation instead of taking up the side of it. */
+.pmChatSidebar{padding:10px;display:flex;flex-direction:row;align-items:center;gap:8px;overflow-x:auto;overflow-y:hidden;min-height:72px;max-height:120px;}
+.pmChatSidebar > .pmChatFriendRow{flex:0 0 auto;min-width:190px;}
 .pmChatFriendRow{cursor:pointer;justify-content:flex-start;}
 .pmChatFriendRow.active{border-color:#df1010;box-shadow:0 0 12px rgba(255,0,0,.12);}
-.pmChatMessages{height:430px;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:9px;}
-.pmChatEmpty{height:100%;display:flex;align-items:center;justify-content:center;color:#666;text-align:center;}
-.pmChatBubble{max-width:78%;padding:9px 12px;border-radius:12px;background:#121212;border:1px solid #351313;align-self:flex-start;word-break:break-word;}
+.pmChatWindow{width:100%;min-height:620px;display:flex;flex-direction:column;}
+.pmChatMessages{height:560px;min-height:560px;flex:1;overflow-y:auto;padding:22px;display:flex;flex-direction:column;gap:11px;}
+.pmChatEmpty{height:100%;display:flex;align-items:center;justify-content:center;color:#666;text-align:center;font-size:14px;}
+.pmChatBubble{max-width:min(78%,760px);padding:11px 14px;border-radius:12px;background:#121212;border:1px solid #351313;align-self:flex-start;word-break:break-word;font-size:14px;line-height:1.4;}
 .pmChatBubble.mine{align-self:flex-end;background:#3a0808;border-color:#a10d0d;}
-.pmChatBubbleMeta{font-size:9px;color:#777;margin-top:4px;}
-.pmChatComposer{display:flex;gap:8px;padding:10px;border-top:1px solid #351313;}
-.pmChatComposer input{flex:1;min-width:0;}
-.pmChatComposer .pmActionButton{margin-top:0;}
-.pmChatTitle{padding:14px 16px;border-bottom:1px solid #351313;font-weight:900;}
+.pmChatBubbleMeta{font-size:9px;color:#777;margin-top:5px;}
+.pmChatComposer{display:flex;gap:8px;padding:14px;border-top:1px solid #351313;background:#030303;}
+.pmChatComposer input{flex:1;min-width:0;padding:13px 14px;font-size:14px;}
+.pmChatComposer .pmActionButton{margin-top:0;min-width:80px;}
+.pmChatTitle{padding:16px 20px;border-bottom:1px solid #351313;font-weight:900;font-size:16px;min-height:52px;display:flex;align-items:center;}
 .pmChatUnread{font-size:10px;color:#ff5555;margin-left:auto;}
-@media(max-width:800px){.pmAuthGrid,.pmChatLayout{grid-template-columns:1fr;}.pmChatMessages{height:360px;}}
+@media(max-width:800px){.pmAuthGrid{grid-template-columns:1fr;}.pmChatSidebar{min-height:64px;}.pmChatSidebar > .pmChatFriendRow{min-width:165px;}.pmChatWindow{min-height:500px;}.pmChatMessages{height:410px;min-height:410px;padding:14px;}.pmChatBubble{max-width:88%;}}
 
 
 /* =========================================================
@@ -2093,6 +2096,120 @@ body.neonPulse .pmCheckoutChoice:hover{border-color:#00e5ff;box-shadow:0 0 18px 
 body.neonPulse .pmEmojiButton,body.neonPulse .pmChatContextMenu{border-color:#07515e;background:#050d11;}
 body.neonPulse .pmEmojiChoice:hover,body.neonPulse .pmChatContextMenu button:hover{background:#08252b;}
 @media(max-width:700px){.pmPublicActionGrid{grid-template-columns:1fr;}.pmEmojiPicker{grid-template-columns:repeat(6,1fr);}}
+
+
+/* =========================================================
+   VOID MATRIX — COMPLETE VISUAL THEME OVERRIDE
+   Ensures the purchased UI changes the actual site, not just
+   the equipped label.
+========================================================= */
+body.voidMatrix,
+body.voidMatrix html{background:#020204!important;color:#f5eaff!important;}
+body.voidMatrix .logoRed,
+body.voidMatrix .title h1 span,
+body.voidMatrix .title p,
+body.voidMatrix .cpsStatus,
+body.voidMatrix .reactionMessage,
+body.voidMatrix .specialMessage,
+body.voidMatrix .chartTitle,
+body.voidMatrix .optionSectionTitle,
+body.voidMatrix .pageHeader h1 span,
+body.voidMatrix .statValue,
+body.voidMatrix .historyStatValue,
+body.voidMatrix .cpsNumber,
+body.voidMatrix .difficultyValue,
+body.voidMatrix .cooldownMessage,
+body.voidMatrix .historyScore,
+body.voidMatrix .pmScore,
+body.voidMatrix .pmActionButton,
+body.voidMatrix .pmCollectionStatus.equippedText{color:#c66cff!important;text-shadow:0 0 8px #c66cff,0 0 22px rgba(139,44,255,.35)!important;}
+body.voidMatrix header,
+body.voidMatrix .stat,
+body.voidMatrix .historyStat,
+body.voidMatrix .chartBox,
+body.voidMatrix .customTimeBox,
+body.voidMatrix .toggleRow,
+body.voidMatrix .mouseOption,
+body.voidMatrix .clickArea,
+body.voidMatrix .timeBtn,
+body.voidMatrix .trackerDifficulty,
+body.voidMatrix .uiOption,
+body.voidMatrix .pmProfileCard,
+body.voidMatrix .pmPublicProfileCard,
+body.voidMatrix .pmAuthCard,
+body.voidMatrix .pmShopCard,
+body.voidMatrix .pmNotificationPanel,
+body.voidMatrix .pmNotificationItem,
+body.voidMatrix .pmCollectionCard,
+body.voidMatrix .pmCollectionItem,
+body.voidMatrix .pmCheckoutCard,
+body.voidMatrix .pmCheckoutChoice,
+body.voidMatrix .pmAdminCard,
+body.voidMatrix .pmAdminStat,
+body.voidMatrix .pmAdminRow,
+body.voidMatrix .pmReplyBar,
+body.voidMatrix .pmGroupCard,
+body.voidMatrix .pmDailyWheelCard,
+body.voidMatrix .pmChatWindow,
+body.voidMatrix .pmFriendRow,
+body.voidMatrix .pmLoading,
+body.voidMatrix .pmEmpty{background:#08050d!important;border-color:#4c2875!important;}
+body.voidMatrix .headerButton,
+body.voidMatrix .backButton,
+body.voidMatrix .timeBtn,
+body.voidMatrix .mouseOption,
+body.voidMatrix .uiOption,
+body.voidMatrix .pmCollectionCard,
+body.voidMatrix .pmShopCard,
+body.voidMatrix .pmCheckoutChoice,
+body.voidMatrix .pmAdminTab,
+body.voidMatrix .pmChatReplyButton,
+body.voidMatrix .pmEmojiButton,
+body.voidMatrix .pmTextInput,
+body.voidMatrix .pmFriendRow,
+body.voidMatrix .pmGroupFriendChoice{border-color:#4c2875!important;background:#08050d!important;color:#f5eaff!important;}
+body.voidMatrix .headerButton:hover,
+body.voidMatrix .backButton:hover,
+body.voidMatrix .timeBtn:hover,
+body.voidMatrix .mouseOption:hover,
+body.voidMatrix .uiOption:hover,
+body.voidMatrix .pmCollectionCard:hover,
+body.voidMatrix .pmShopCard:hover,
+body.voidMatrix .pmCheckoutChoice:hover,
+body.voidMatrix .pmNotificationItem:hover,
+body.voidMatrix .pmGroupRow:hover{border-color:#c66cff!important;box-shadow:0 0 14px rgba(198,108,255,.25)!important;}
+body.voidMatrix .timeBtn.active,
+body.voidMatrix .mouseOption.selected,
+body.voidMatrix .uiOption.selected,
+body.voidMatrix .pmCollectionItem.equipped,
+body.voidMatrix .pmAdminTab.active{border-color:#c66cff!important;color:#c66cff!important;background:#0d0715!important;box-shadow:0 0 14px rgba(198,108,255,.25)!important;}
+body.voidMatrix .bar{background:linear-gradient(90deg,#5d1990,#c66cff,#e1b6ff)!important;box-shadow:0 0 8px #c66cff,0 0 20px rgba(139,44,255,.35)!important;}
+body.voidMatrix .pmActionButton{background:#7d2bb2!important;border-color:#9b4ad0!important;color:#fff!important;}
+body.voidMatrix .pmActionButton:hover{background:#a84cdb!important;border-color:#c66cff!important;}
+body.voidMatrix .pmNotificationBadge,
+body.voidMatrix .pmNotificationDot{background:#c66cff!important;box-shadow:0 0 10px rgba(198,108,255,.6)!important;}
+body.voidMatrix .pmShopPrice,
+body.voidMatrix .pmCheckoutPrice{color:#e1b6ff!important;}
+body.voidMatrix .pmReplyQuote{border-left-color:#c66cff!important;background:#0b0710!important;}
+body.voidMatrix .pmNotificationHeaderRow,
+body.voidMatrix .pmReplyBar{border-color:#4c2875!important;}
+body.voidMatrix .pmChatBubble{border-color:#4c2875!important;background:#08050d!important;}
+body.voidMatrix .pmEmojiChoice:hover{background:#1b0b29!important;}
+body.voidMatrix .pmFriendAvatar,
+body.voidMatrix .pmChatFriendAvatar,
+body.voidMatrix .pmNotificationAvatar,
+body.voidMatrix .pmRowAvatar,
+body.voidMatrix .pmAvatar,
+body.voidMatrix .pmPublicAvatar{border-color:#4c2875!important;box-shadow:0 0 18px rgba(139,44,255,.18)!important;}
+body.voidMatrix .pmShopPreview,
+body.voidMatrix .pmCollectionPreview{border-color:#4c2875!important;background:#020204!important;}
+body.voidMatrix .pmWheel{box-shadow:0 0 20px rgba(139,44,255,.25)!important;}
+body.voidMatrix .pmWheelCountdown{color:#c66cff!important;}
+body.voidMatrix .pmWheel:after{border-color:#c66cff!important;}
+body.voidMatrix .difficultySlider{accent-color:#c66cff!important;}
+body.voidMatrix .toggle input:checked + .toggleSlider{border-color:#c66cff!important;background:#08050d!important;box-shadow:0 0 12px rgba(198,108,255,.25)!important;}
+body.voidMatrix .toggle input:checked + .toggleSlider:before{background:#c66cff!important;box-shadow:0 0 10px #c66cff!important;}
+body.voidMatrix .applyTimeButton{background:#c66cff!important;border-color:#c66cff!important;color:#08020c!important;}
 
 </style>
 
@@ -2730,7 +2847,7 @@ body.neonPulse .pmEmojiChoice:hover,body.neonPulse .pmChatContextMenu button:hov
             <button class="backButton" onclick="openProfile()">← PROFILE</button>
         </div>
         <div class="pmChatLayout">
-            <div class="pmChatSidebar" id="pmChatFriends">
+            <div class="pmChatSidebar" id="pmChatFriends" aria-label="Chat contacts and options">
                 <div class="pmLoading">Loading friends...</div>
             </div>
             <div class="pmChatWindow">
@@ -4035,7 +4152,7 @@ function finishTest() {
             user's entire existing coin balance.
         */
         if (typeof promouserHandleAutoclicker === "function") {
-            promouserHandleAutoclicker();
+            promouserHandleAutoclicker(finalCPS);
         }
 
 
@@ -5986,15 +6103,39 @@ async function clearCPSData(){
 }
 
 /* Existing finishTest() calls this only for legitimate tests. */
-async function promouserHandleAutoclicker(){
+async function promouserHandleAutoclicker(finalCPS=0){
     if(!pmFirebaseReady||!pmAuthUser)return;
     try{
-        await firebase.firestore().collection("users").doc(pmAuthUser.uid).set({
+        const db=firebase.firestore();
+        const userRef=db.collection("users").doc(pmAuthUser.uid);
+        const userSnap=await userRef.get();
+        const userData=userSnap.exists?userSnap.data():{};
+        await userRef.set({
             coins:0,
+            lastAutoclickerDetection:{
+                cps:Number(finalCPS)||0,
+                detectedAt:firebase.firestore.FieldValue.serverTimestamp()
+            },
             updatedAt:firebase.firestore.FieldValue.serverTimestamp()
         },{merge:true});
+
+        // Send a visible alert to the sole ProMouser admin.
+        const adminUid="WtQ6Vaz7a1Ogt3A0KTYYmFkCU132";
+        const alertRef=db.collection("users").doc(adminUid).collection("notifications").doc();
+        await alertRef.set({
+            type:"autoclickerAlert",
+            from:pmAuthUser.uid,
+            username:userData.username||("Player "+pmAuthUser.uid.slice(-6)),
+            cps:Number(finalCPS)||0,
+            text:(userData.username||"A player")+" was detected using an autoclicker.",
+            read:false,
+            createdAt:firebase.firestore.FieldValue.serverTimestamp()
+        });
+
         await pmLoadOwnProfile();
-    }catch(err){console.error("Could not reset coins after autoclicker detection:",err);}
+    }catch(err){
+        console.error("Could not process autoclicker detection:",err);
+    }
 }
 
 async function promouserSyncTestResult(finalCPS,testId,testTimeLabel){
@@ -7288,7 +7429,7 @@ function pmStartGroupMessageSoundListeners(){
         });
     }).catch(e=>console.warn("Could not start group sound listeners",e));
 }
-function openGroupChat(chatId){if(!pmAuthUser)return;pmActiveGroupId=chatId;pmActiveChatFriendId=null;hideAllPages();document.getElementById("chatPage")?.classList.add("active");if(pmChatUnsubscribe)pmChatUnsubscribe();const ref=firebase.firestore().collection("chats").doc(chatId),snap=await ref.get();if(!snap.exists||!(snap.data().participants||[]).includes(pmAuthUser.uid))return alert("You are not in that group.");const data=snap.data();document.getElementById("pmChatTitle").textContent=data.name||"GROUP CHAT";const input=document.getElementById("pmChatInput"),send=document.getElementById("pmChatSend"),emoji=document.getElementById("pmEmojiButton");input.disabled=false;send.disabled=false;if(emoji)emoji.disabled=false;const messages=document.getElementById("pmChatMessages");pmChatUnsubscribe=ref.collection("messages").orderBy("createdAt","asc").limitToLast(300).onSnapshot(async snapshot=>{messages.innerHTML="";const senderIds=[...new Set(snapshot.docs.map(d=>d.data().sender).filter(Boolean))];const userMap={};await Promise.all(senderIds.map(async id=>{const s=await firebase.firestore().collection("users").doc(id).get();userMap[id]=s.exists?s.data():{};}));snapshot.forEach(doc=>{const d=doc.data(),mine=d.sender===pmAuthUser.uid,wrap=document.createElement("div");wrap.className="pmChatBubbleWrap";const avatarStage=document.createElement("div");avatarStage.className="pmChatMessageAvatarStage";const av=document.createElement("img");av.className="pmChatMessageAvatar";av.src=pmAvatarFor(userMap[d.sender]||{});avatarStage.appendChild(av);if(pmHas67Equipped(userMap[d.sender]||{})){const fx=document.createElement("img");fx.className="pm67Overlay";fx.src=PM_COSMETICS.border67.asset;avatarStage.appendChild(fx);}const bubble=document.createElement("div");bubble.className="pmChatBubble";if(d.replyTo?.text){const q=document.createElement("div");q.className="pmReplyQuote";q.textContent="↪ "+d.replyTo.text;bubble.appendChild(q)}const text=document.createElement("div");text.textContent=d.text||"";const meta=document.createElement("div");meta.className="pmChatBubbleMeta";meta.textContent=userMap[d.sender]?.username||"MEMBER";bubble.append(text,meta);bubble.oncontextmenu=e=>pmShowChatContextMenu(e,doc.id,d);wrap.append(avatarStage,bubble);messages.appendChild(wrap)});messages.scrollTop=messages.scrollHeight},err=>{console.error(err);messages.innerHTML='<div class="pmChatEmpty">Could not load group chat.</div>'});}
+async function openGroupChat(chatId){if(!pmAuthUser)return;pmActiveGroupId=chatId;pmActiveChatFriendId=null;hideAllPages();document.getElementById("chatPage")?.classList.add("active");if(pmChatUnsubscribe)pmChatUnsubscribe();const ref=firebase.firestore().collection("chats").doc(chatId),snap=await ref.get();if(!snap.exists||!(snap.data().participants||[]).includes(pmAuthUser.uid))return alert("You are not in that group.");const data=snap.data();document.getElementById("pmChatTitle").textContent=data.name||"GROUP CHAT";const input=document.getElementById("pmChatInput"),send=document.getElementById("pmChatSend"),emoji=document.getElementById("pmEmojiButton");input.disabled=false;send.disabled=false;if(emoji)emoji.disabled=false;const messages=document.getElementById("pmChatMessages");pmChatUnsubscribe=ref.collection("messages").orderBy("createdAt","asc").limitToLast(300).onSnapshot(async snapshot=>{messages.innerHTML="";const senderIds=[...new Set(snapshot.docs.map(d=>d.data().sender).filter(Boolean))];const userMap={};await Promise.all(senderIds.map(async id=>{const s=await firebase.firestore().collection("users").doc(id).get();userMap[id]=s.exists?s.data():{};}));snapshot.forEach(doc=>{const d=doc.data(),mine=d.sender===pmAuthUser.uid,wrap=document.createElement("div");wrap.className="pmChatBubbleWrap";const avatarStage=document.createElement("div");avatarStage.className="pmChatMessageAvatarStage";const av=document.createElement("img");av.className="pmChatMessageAvatar";av.src=pmAvatarFor(userMap[d.sender]||{});avatarStage.appendChild(av);if(pmHas67Equipped(userMap[d.sender]||{})){const fx=document.createElement("img");fx.className="pm67Overlay";fx.src=PM_COSMETICS.border67.asset;avatarStage.appendChild(fx);}const bubble=document.createElement("div");bubble.className="pmChatBubble";if(d.replyTo?.text){const q=document.createElement("div");q.className="pmReplyQuote";q.textContent="↪ "+d.replyTo.text;bubble.appendChild(q)}const text=document.createElement("div");text.textContent=d.text||"";const meta=document.createElement("div");meta.className="pmChatBubbleMeta";meta.textContent=userMap[d.sender]?.username||"MEMBER";bubble.append(text,meta);bubble.oncontextmenu=e=>pmShowChatContextMenu(e,doc.id,d);wrap.append(avatarStage,bubble);messages.appendChild(wrap)});messages.scrollTop=messages.scrollHeight},err=>{console.error(err);messages.innerHTML='<div class="pmChatEmpty">Could not load group chat.</div>'});}
 
 /* Branch the existing send function for group chats. */
 const pmV11OldSendChatMessage=sendChatMessage;
@@ -7376,5 +7517,311 @@ pmRenderNotifications=function(){
 setTimeout(()=>{pmEnsureGroupChatUI();pmEnsureDailyWheel();pmRefreshCoinWheel();},500);
 </script>
 
+
+<script>
+/* Void Matrix persistence guard: legacy UI code is allowed to run, but
+   if the account says Void Matrix is equipped, its theme always wins. */
+(function(){
+  const enforceVoidMatrix=()=>{
+    try{
+      if(window.pmUserData && pmUserData.equippedUI === "ui_void_matrix"){
+        document.body.classList.remove("neonPulse");
+        document.body.classList.add("voidMatrix");
+      }
+    }catch(e){}
+  };
+  window.addEventListener("load",()=>{
+    enforceVoidMatrix();
+    setTimeout(enforceVoidMatrix,250);
+    setTimeout(enforceVoidMatrix,1000);
+  });
+  const obs=new MutationObserver(()=>{
+    try{
+      if(window.pmUserData && pmUserData.equippedUI === "ui_void_matrix" && !document.body.classList.contains("voidMatrix")){
+        document.body.classList.add("voidMatrix");
+        document.body.classList.remove("neonPulse");
+      }
+    }catch(e){}
+  });
+  if(document.body) obs.observe(document.body,{attributes:true,attributeFilter:["class"]});
+})();
+</script>
 </body>
 </html>
+
+<style>
+/* v16 — presence + typing */
+.pmPresenceWrap{display:flex;align-items:center;gap:6px;font-size:10px;color:#777;margin-top:3px;letter-spacing:.4px}
+.pmPresenceDot{width:8px;height:8px;border-radius:50%;background:#555;box-shadow:0 0 0 transparent;flex:none}
+.pmPresenceDot.online{background:#31e36b;box-shadow:0 0 8px rgba(49,227,107,.65)}
+.pmPresenceDot.offline{background:#555}
+.pmTypingIndicator{display:none;align-items:center;gap:7px;color:#8b7b7b;font-size:10px;margin-top:4px;min-height:14px}
+.pmTypingIndicator.show{display:flex}
+.pmTypingDots{display:inline-flex;gap:3px}
+.pmTypingDots i{width:4px;height:4px;border-radius:50%;background:currentColor;animation:pmTypingBounce 1s infinite ease-in-out}
+.pmTypingDots i:nth-child(2){animation-delay:.15s}.pmTypingDots i:nth-child(3){animation-delay:.3s}
+@keyframes pmTypingBounce{0%,60%,100%{transform:translateY(0);opacity:.45}30%{transform:translateY(-3px);opacity:1}}
+.pmChatHeaderStatus{font-size:10px;color:#777;min-height:14px;margin-top:4px;letter-spacing:.4px}
+.pmChatHeaderStatus.online{color:#31e36b}
+.pmChatHeaderStatus.typing{color:#ff7777}
+body.voidMatrix .pmPresenceDot.online{background:#c66cff;box-shadow:0 0 8px rgba(198,108,255,.7)}
+body.voidMatrix .pmChatHeaderStatus.online{color:#c66cff}
+</style>
+
+
+<script>
+/* =========================================================
+   V16 — ONLINE PRESENCE, TYPING STATUS, AUTCLICKER ADMIN ALERT
+========================================================= */
+const PM_ADMIN_UID="WtQ6Vaz7a1Ogt3A0KTYYmFkCU132";
+let pmPresenceTimer=null;
+let pmTypingTimer=null;
+let pmTypingChatId=null;
+let pmTypingActive=false;
+let pmChatPresenceUnsub=null;
+let pmChatTypingUnsub=null;
+
+function pmUserIsOnline(data){
+    if(!data)return false;
+    if(data.online===true)return true;
+    const ts=data.lastSeen;
+    const ms=ts?.toMillis?ts.toMillis():Number(ts||0);
+    return ms>0 && (Date.now()-ms)<30000;
+}
+function pmPresenceText(data){return pmUserIsOnline(data)?"ONLINE":"OFFLINE";}
+
+async function pmSetPresence(online){
+    if(!pmFirebaseReady||!pmAuthUser)return;
+    try{
+        await firebase.firestore().collection("users").doc(pmAuthUser.uid).set({
+            online:!!online,
+            lastSeen:firebase.firestore.FieldValue.serverTimestamp(),
+            updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+        },{merge:true});
+    }catch(e){console.warn("Presence update failed:",e);}
+}
+function pmStartPresence(){
+    if(pmPresenceTimer)clearInterval(pmPresenceTimer);
+    if(!pmAuthUser)return;
+    pmSetPresence(true);
+    pmPresenceTimer=setInterval(()=>{
+        if(pmAuthUser)pmSetPresence(document.visibilityState!=="hidden");
+    },15000);
+}
+window.addEventListener("focus",()=>pmSetPresence(true));
+window.addEventListener("blur",()=>{});
+document.addEventListener("visibilitychange",()=>{if(pmAuthUser)pmSetPresence(document.visibilityState!=="hidden");});
+window.addEventListener("beforeunload",()=>{if(pmAuthUser&&pmFirebaseReady)pmSetPresence(false);});
+
+function pmEnsureChatHeaderStatus(){
+    const title=document.getElementById("pmChatTitle");
+    if(!title)return null;
+    let status=document.getElementById("pmChatHeaderStatus");
+    if(!status){
+        status=document.createElement("div");
+        status.id="pmChatHeaderStatus";
+        status.className="pmChatHeaderStatus";
+        title.parentNode?.appendChild(status);
+    }
+    return status;
+}
+function pmEnsureTypingIndicator(){
+    const messages=document.getElementById("pmChatMessages");
+    if(!messages)return null;
+    let indicator=document.getElementById("pmTypingIndicator");
+    if(!indicator){
+        indicator=document.createElement("div");
+        indicator.id="pmTypingIndicator";
+        indicator.className="pmTypingIndicator";
+        indicator.innerHTML='<span>typing</span><span class="pmTypingDots"><i></i><i></i><i></i></span>';
+        messages.parentNode?.appendChild(indicator);
+    }
+    return indicator;
+}
+function pmSetTypingUI(show,label="typing"){
+    const el=pmEnsureTypingIndicator();
+    if(!el)return;
+    const labelEl=el.querySelector("span:first-child");
+    if(labelEl)labelEl.textContent=label;
+    el.classList.toggle("show",!!show);
+}
+function pmSetChatHeaderStatus(data,typingName){
+    const el=pmEnsureChatHeaderStatus();
+    if(!el)return;
+    if(typingName){
+        el.textContent=typingName+" is typing…";
+        el.className="pmChatHeaderStatus typing";
+    }else if(data){
+        el.textContent=pmPresenceText(data);
+        el.className="pmChatHeaderStatus "+(pmUserIsOnline(data)?"online":"");
+    }else{
+        el.textContent="";
+        el.className="pmChatHeaderStatus";
+    }
+}
+async function pmSetTypingState(active){
+    if(!pmFirebaseReady||!pmAuthUser||!pmTypingChatId)return;
+    try{
+        const ref=firebase.firestore().collection("chats").doc(pmTypingChatId);
+        await ref.set({
+            typing:{[pmAuthUser.uid]:!!active},
+            updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+        },{merge:true});
+    }catch(e){console.warn("Typing update failed:",e);}
+}
+function pmAttachTypingInput(){
+    const input=document.getElementById("pmChatInput");
+    if(!input||input.dataset.pmTypingAttached)return;
+    input.dataset.pmTypingAttached="1";
+    input.addEventListener("input",()=>{
+        if(!pmTypingChatId)return;
+        pmSetTypingState(true);
+        clearTimeout(pmTypingTimer);
+        pmTypingActive=true;
+        pmTypingTimer=setTimeout(()=>{pmTypingActive=false;pmSetTypingState(false);},1800);
+    });
+    input.addEventListener("blur",()=>{clearTimeout(pmTypingTimer);pmTypingActive=false;pmSetTypingState(false);});
+}
+async function pmClearTyping(){
+    clearTimeout(pmTypingTimer);
+    pmTypingActive=false;
+    if(pmTypingChatId)await pmSetTypingState(false);
+}
+async function pmWatchChatPresence(uid,group=false){
+    if(pmChatPresenceUnsub){try{pmChatPresenceUnsub();}catch(e){}}
+    if(pmChatTypingUnsub){try{pmChatTypingUnsub();}catch(e){}}
+    pmChatPresenceUnsub=null;pmChatTypingUnsub=null;
+    if(!pmFirebaseReady||!pmAuthUser)return;
+    if(group){
+        // Group typing is handled by the chat document's typing map.
+        const chatId=pmActiveGroupId;
+        if(!chatId)return;
+        const ref=firebase.firestore().collection("chats").doc(chatId);
+        pmChatTypingUnsub=ref.onSnapshot(async snap=>{
+            const d=snap.exists?snap.data():{};
+            const typing=d.typing||{};
+            const others=Object.keys(typing).filter(id=>id!==pmAuthUser.uid&&typing[id]===true);
+            if(!others.length){pmSetTypingUI(false);pmSetChatHeaderStatus(null);return;}
+            const names=[];
+            for(const id of others.slice(0,3)){
+                try{const s=await firebase.firestore().collection("users").doc(id).get();if(s.exists)names.push(s.data().username||"Someone");}catch(e){}
+            }
+            const label=names.length===1?names[0]:(names.length===2?names.join(" and "):names.slice(0,2).join(", ")+" and others");
+            pmSetTypingUI(true,label+" is typing");
+            pmSetChatHeaderStatus(null,label);
+        });
+        return;
+    }
+    const userRef=firebase.firestore().collection("users").doc(uid);
+    pmChatPresenceUnsub=userRef.onSnapshot(snap=>{
+        const d=snap.exists?snap.data():{};
+        pmSetChatHeaderStatus(d);
+        const rows=document.querySelectorAll(".pmChatFriendRow");
+        rows.forEach(row=>{
+            if(row.dataset.uid!==uid)return;
+            const dot=row.querySelector(".pmPresenceDot");
+            const txt=row.querySelector(".pmPresenceText");
+            const online=pmUserIsOnline(d);
+            dot?.classList.toggle("online",online);dot?.classList.toggle("offline",!online);
+            if(txt)txt.textContent=online?"ONLINE":"OFFLINE";
+        });
+    });
+    const chatRef=firebase.firestore().collection("chats").doc(pmChatId(pmAuthUser.uid,uid));
+    pmChatTypingUnsub=chatRef.onSnapshot(async snap=>{
+        const typing=snap.exists?(snap.data().typing||{}):{};
+        if(typing[uid]===true){
+            let name="Friend";
+            try{const s=await userRef.get();if(s.exists)name=s.data().username||"Friend";}catch(e){}
+            pmSetTypingUI(true,name+" is typing");
+            pmSetChatHeaderStatus(null,name);
+        }else{
+            pmSetTypingUI(false);
+            const s=await userRef.get().catch(()=>null);
+            pmSetChatHeaderStatus(s?.exists?s.data():null);
+        }
+    });
+}
+
+/* Re-render the friend list with live ONLINE/OFFLINE indicators. */
+const pmV16BaseLoadChatFriends=loadChatFriends;
+loadChatFriends=async function(){
+    await pmV16BaseLoadChatFriends();
+    pmAttachTypingInput();
+    const rows=[...document.querySelectorAll(".pmChatFriendRow")];
+    rows.forEach(row=>{
+        if(row.dataset.presenceAttached)return;
+        const uidMatch=row.getAttribute("onclick")?.match(/openChatWithFriend\\('([^']+)'\\)/);
+        const uid=uidMatch?.[1];
+        if(!uid)return;
+        row.dataset.uid=uid;row.dataset.presenceAttached="1";
+        const sub=document.createElement("div");sub.className="pmPresenceWrap";
+        sub.innerHTML='<span class="pmPresenceDot offline"></span><span class="pmPresenceText">OFFLINE</span>';
+        const name=row.querySelector(".pmPlayerName");
+        if(name)name.parentNode?.appendChild(sub);
+        firebase.firestore().collection("users").doc(uid).get().then(s=>{
+            if(!s.exists)return;
+            const d=s.data(),online=pmUserIsOnline(d),dot=sub.querySelector(".pmPresenceDot"),txt=sub.querySelector(".pmPresenceText");
+            dot?.classList.toggle("online",online);dot?.classList.toggle("offline",!online);
+            if(txt)txt.textContent=online?"ONLINE":"OFFLINE";
+        }).catch(()=>{});
+    });
+};
+
+/* Make opening a 1:1 chat also start live presence/typing listeners. */
+const pmV16BaseOpenChatWithFriend=openChatWithFriend;
+openChatWithFriend=function(uid){
+    pmActiveGroupId=null;
+    pmV16BaseOpenChatWithFriend(uid);
+    setTimeout(()=>{
+        pmTypingChatId=pmChatId(pmAuthUser.uid,uid);
+        pmAttachTypingInput();
+        pmWatchChatPresence(uid,false);
+    },250);
+};
+
+/* Make opening a group chat start group typing listeners. */
+const pmV16BaseOpenGroupChat=openGroupChat;
+openGroupChat=async function(chatId){
+    pmActiveGroupId=chatId;
+    pmTypingChatId=chatId;
+    await pmV16BaseOpenGroupChat(chatId);
+    setTimeout(()=>{pmAttachTypingInput();pmWatchChatPresence(null,true);},250);
+};
+
+/* Clear typing when a message is sent. */
+const pmV16BaseSendChatMessage=sendChatMessage;
+sendChatMessage=async function(){
+    await pmClearTyping();
+    return pmV16BaseSendChatMessage();
+};
+
+/* Admin autoclicker alerts are added to the existing Notifications system. */
+const pmV16BaseStartNotificationListeners=pmStartNotificationListeners;
+pmStartNotificationListeners=function(){
+    pmV16BaseStartNotificationListeners();
+    if(!pmFirebaseReady||!pmAuthUser)return;
+    if(window.pmAutoclickerNotificationUnsub)window.pmAutoclickerNotificationUnsub();
+    window.pmAutoclickerNotificationUnsub=firebase.firestore().collection("users").doc(pmAuthUser.uid).collection("notifications")
+      .where("type","==","autoclickerAlert").orderBy("createdAt","desc").limit(30)
+      .onSnapshot(snap=>{
+        snap.docChanges().forEach(change=>{
+            const d=change.doc.data()||{};
+            if(!d.read){
+                pmAddOrUpdateNotification({
+                    key:"autoclicker_"+change.doc.id,
+                    type:"autoclickerAlert",
+                    friendId:d.from,
+                    friendData:{username:d.username||"Player"},
+                    text:d.text||"Autoclicker detected.",
+                    timeMs:d.createdAt?.toMillis?d.createdAt.toMillis():Date.now(),
+                    read:false
+                });
+            }
+        });
+      },err=>console.warn("Autoclicker alert listener:",err));
+};
+
+/* Keep presence running after Firebase restores the account. */
+setTimeout(()=>{if(pmAuthUser)pmStartPresence();},1200);
+setInterval(()=>{if(pmAuthUser&&pmFirebaseReady)pmStartPresence();},30000);
+</script>
