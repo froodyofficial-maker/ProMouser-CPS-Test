@@ -7034,5 +7034,203 @@ pmBuildEmojiPicker();
 pmV6SyncShopPrices();
 </script>
 
+
+<style>
+/* =========================================================
+   PROMOUSER V11 — WHEEL / GROUP CHAT / ADMIN COINS / SECRET CODES
+========================================================= */
+.pmDailyWheelCard,.pmGroupCard{background:#050505;border:1px solid #351313;border-radius:14px;padding:22px;margin-top:18px}
+.pmWheelWrap{display:flex;gap:24px;align-items:center;flex-wrap:wrap}
+.pmWheel{width:220px;height:220px;border-radius:50%;position:relative;border:8px solid #161616;box-shadow:0 0 20px rgba(255,23,23,.25);overflow:hidden;transition:transform 1.8s cubic-bezier(.12,.8,.2,1);background:conic-gradient(#ff1717 0deg 45deg,#171717 45deg 90deg,#ff1717 90deg 135deg,#171717 135deg 180deg,#ff1717 180deg 225deg,#171717 225deg 270deg,#ff1717 270deg 315deg,#171717 315deg 360deg)}
+.pmWheel:after{content:"SPIN";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:64px;height:64px;border-radius:50%;background:#050505;border:2px solid #ff1717;display:grid;place-items:center;font-weight:1000;color:#fff;letter-spacing:1px}
+.pmWheelPointer{width:0;height:0;border-left:11px solid transparent;border-right:11px solid transparent;border-top:22px solid #fff;filter:drop-shadow(0 0 5px #ff1717);position:absolute;left:calc(50% - 11px);top:-4px;z-index:3}
+.pmWheelInfo{flex:1;min-width:240px}.pmWheelReward{font-size:34px;font-weight:1000;color:#fff;margin:10px 0}.pmWheelCountdown{color:#ff7373;font-weight:800}
+.pmGroupCreateGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:14px}.pmGroupFriendChoice{display:flex;align-items:center;gap:10px;padding:12px;border:1px solid #321313;border-radius:10px;background:#020202;cursor:pointer}.pmGroupFriendChoice input{accent-color:#ff1717}.pmGroupList{display:grid;gap:8px;margin-top:14px}.pmGroupRow{padding:12px;border:1px solid #321313;border-radius:10px;background:#030303;cursor:pointer}.pmGroupRow:hover{border-color:#ff1717}.pmGroupRowTitle{font-weight:1000;color:#fff}.pmGroupRowSub{font-size:11px;color:#817474;margin-top:3px}
+.pmAdminCoinTools{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.pmAdminCoinTool{border:1px solid #351313;border-radius:10px;padding:14px;background:#030303}.pmAdminCoinTool h3{margin:0 0 8px;color:#fff}.pmAdminCoinTool input{margin-top:6px}
+@media(max-width:700px){.pmAdminCoinTools{grid-template-columns:1fr}.pmWheel{width:180px;height:180px}}
+</style>
+
+<script>
+/* =========================================================
+   V11 ADDITIONS
+========================================================= */
+
+/* ---------- COIN GIFT NOTIFICATIONS ---------- */
+async function pmCreateCoinGiftNotification(targetId, amount, fromName){
+    if(!pmFirebaseReady||!pmAuthUser||!targetId)return;
+    const db=firebase.firestore();
+    const ref=db.collection("users").doc(targetId).collection("notifications").doc();
+    await ref.set({type:"coinGift",from:pmAuthUser.uid,fromName:fromName||pmUserData?.username||"Player",amount:Number(amount)||0,read:false,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+}
+
+/* Replace the existing gift transfer so the recipient also gets a notification. */
+pmSendCoinsFromGiftPage=async function(){
+    if(!pmFirebaseReady||!pmAuthUser)return alert("Connect your account first.");
+    const nameInput=document.getElementById("pmGiftUsernameInput"),amountInput=document.getElementById("pmGiftAmountInput"),status=document.getElementById("pmGiftStatus");
+    const username=String(nameInput?.value||"").trim();
+    const amount=Math.floor(Number(String(amountInput?.value||"").replace(/,/g,"")));
+    if(!username)return alert("Enter the recipient's username.");
+    if(!Number.isFinite(amount)||amount<1||amount>1000000)return alert("Enter a whole number between 1 and 1,000,000.");
+    try{
+        const db=firebase.firestore(); let targetId=window.pmGiftPresetUid||"";
+        if(!targetId){const q=await db.collection("users").where("usernameLower","==",username.toLowerCase()).limit(2).get();const target=q.docs.find(doc=>doc.id!==pmAuthUser.uid);if(!target)return alert("Player not found.");targetId=target.id;}
+        if(targetId===pmAuthUser.uid)return alert("You cannot gift coins to yourself.");
+        const senderRef=db.collection("users").doc(pmAuthUser.uid),targetRef=db.collection("users").doc(targetId),notifRef=targetRef.collection("notifications").doc();
+        if(status)status.textContent="Sending coins...";
+        await db.runTransaction(async tx=>{
+            const ss=await tx.get(senderRef),ts=await tx.get(targetRef);if(!ss.exists||!ts.exists)throw new Error("PROFILE_MISSING");
+            const sender=ss.data(),target=ts.data(),senderCoins=Math.max(0,Number(sender.coins||0));
+            if(senderCoins<amount)throw new Error("NOT_ENOUGH_COINS");
+            tx.update(senderRef,{coins:senderCoins-amount,lastCoinGift:{to:targetId,amount,at:firebase.firestore.FieldValue.serverTimestamp()},updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+            tx.update(targetRef,{coins:Math.max(0,Number(target.coins||0))+amount,lastCoinGift:{from:pmAuthUser.uid,amount,at:firebase.firestore.FieldValue.serverTimestamp()},updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+            tx.set(notifRef,{type:"coinGift",from:pmAuthUser.uid,fromName:sender.username||pmUserData?.username||"Player",amount,read:false,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+        });
+        await pmLoadOwnProfile();const targetSnap=await targetRef.get(),targetName=targetSnap.exists?(targetSnap.data().username||username):username;
+        if(status)status.textContent="Sent "+amount.toLocaleString()+" coins to "+targetName+".";window.pmGiftPresetUid="";if(nameInput)nameInput.value="";if(amountInput)amountInput.value="";alert("Gifted "+amount.toLocaleString()+" coins to "+targetName+"!");
+    }catch(err){console.error(err);if(status)status.textContent="";if(err.message==="NOT_ENOUGH_COINS")alert("You don't have enough coins.");else if(err.message==="PROFILE_MISSING")alert("That player account could not be found.");else if(err.code==="permission-denied")alert("Firebase denied the coin gift. Publish the V11 Firestore Rules.");else alert("Could not gift those coins.");}
+};
+
+/* Add notification listener for coin gifts. */
+const pmV10StartNotificationListeners=pmStartNotificationListeners;
+pmStartNotificationListeners=function(){
+    pmV10StartNotificationListeners();
+    if(!pmFirebaseReady||!pmAuthUser)return;
+    if(window.pmGiftNotificationUnsub)window.pmGiftNotificationUnsub();
+    window.pmGiftNotificationUnsub=firebase.firestore().collection("users").doc(pmAuthUser.uid).collection("notifications").orderBy("createdAt","desc").limit(50).onSnapshot(snap=>{
+        snap.forEach(doc=>{const d=doc.data()||{};const key="gift_"+doc.id;if(!d.read){pmAddOrUpdateNotification({key,type:"coinGift",friendId:d.from,friendData:{username:d.fromName||"Player"},text:(d.fromName||"Someone")+" gifted you "+Number(d.amount||0).toLocaleString()+" coins! 🪙",timeMs:d.createdAt?.toMillis?d.createdAt.toMillis():Date.now(),read:false});}});
+    },err=>console.error("Gift notification listener:",err));
+};
+
+/* ---------- DAILY 12-HOUR COIN WHEEL ---------- */
+function pmEnsureDailyWheel(){
+    const profile=document.querySelector("#profilePage .pmProfileCard");if(!profile||document.getElementById("pmDailyWheelCard"))return;
+    const card=document.createElement("div");card.id="pmDailyWheelCard";card.className="pmDailyWheelCard";
+    card.innerHTML=`<div class="optionSectionTitle">🪙 COIN WHEEL</div><div class="pmAuthHint">Spin once every 12 hours. It costs <strong>50 coins</strong> and awards a random <strong>10–100 coins</strong>.</div><div class="pmWheelWrap"><div style="position:relative"><div class="pmWheelPointer"></div><div class="pmWheel" id="pmCoinWheel"></div></div><div class="pmWheelInfo"><div class="pmSmallLabel">YOUR BALANCE</div><div class="pmWheelReward">🪙 <span id="pmWheelBalance">0</span></div><div class="pmAuthHint" id="pmWheelStatus">Ready to spin.</div><div class="pmWheelCountdown" id="pmWheelCountdown"></div><button class="pmActionButton" id="pmWheelSpinButton" onclick="pmSpinCoinWheel()">SPIN • 50 🪙</button></div></div>`;
+    profile.parentNode.insertBefore(card,profile.nextSibling);
+    pmRefreshCoinWheel();
+}
+function pmWheelLast(){return Number(pmUserData?.coinWheel?.lastSpinAt||0)||0}
+function pmRefreshCoinWheel(){
+    const bal=document.getElementById("pmWheelBalance");if(bal)bal.textContent=Math.max(0,Number(pmUserData?.coins||0)).toLocaleString();
+    const btn=document.getElementById("pmWheelSpinButton"),status=document.getElementById("pmWheelStatus"),cd=document.getElementById("pmWheelCountdown");
+    const left=Math.max(0,43200000-(Date.now()-pmWheelLast()));
+    if(btn)btn.disabled=left>0||Number(pmUserData?.coins||0)<50;
+    if(status)status.textContent=left>0?"You have already spun the wheel.":Number(pmUserData?.coins||0)<50?"You need at least 50 coins.":"Ready to spin.";
+    if(cd)cd.textContent=left>0?"Next spin in "+new Date(left).toISOString().slice(11,19):"";
+}
+async function pmSpinCoinWheel(){
+    if(!pmFirebaseReady||!pmAuthUser)return alert("Connect your account first.");
+    const btn=document.getElementById("pmWheelSpinButton");if(btn)btn.disabled=true;
+    try{
+        const reward=Math.floor(Math.random()*91)+10,db=firebase.firestore(),ref=db.collection("users").doc(pmAuthUser.uid);
+        await db.runTransaction(async tx=>{const snap=await tx.get(ref);if(!snap.exists)throw new Error("PROFILE_MISSING");const d=snap.data(),coins=Math.max(0,Number(d.coins||0)),last=Number(d.coinWheel?.lastSpinAt||0);if(coins<50)throw new Error("NOT_ENOUGH_COINS");if(Date.now()-last<43200000)throw new Error("COOLDOWN");tx.update(ref,{coins:coins-50+reward,coinWheel:{lastSpinAt:Date.now(),lastReward:reward},updatedAt:firebase.firestore.FieldValue.serverTimestamp()});});
+        const wheel=document.getElementById("pmCoinWheel");if(wheel)wheel.style.transform="rotate("+(1440+reward*17)+"deg)";
+        await pmLoadOwnProfile();pmRefreshCoinWheel();alert("You won "+reward+" coins! 🪙");
+    }catch(e){console.error(e);if(e.message==="NOT_ENOUGH_COINS")alert("You need 50 coins to spin.");else if(e.message==="COOLDOWN")alert("You can spin again in 12 hours.");else alert("Could not spin the wheel.");pmRefreshCoinWheel();}
+}
+
+/* ---------- ADMIN GIVE / DEDUCT COINS ---------- */
+function pmAdminCoinToolsHTML(){return `<div class="pmAdminCoinTools"><div class="pmAdminCoinTool"><h3>🪙 GIVE COINS</h3><div class="pmAuthHint">Add any amount. Admin coins are NOT deducted from your balance.</div><input id="pmAdminGiveAmount" class="pmTextInput" type="number" min="1" max="1000000000" placeholder="Amount"><button class="pmActionButton" style="margin-top:8px" onclick="pmAdminGiveCoins()">GIVE COINS</button></div><div class="pmAdminCoinTool"><h3>🗑️ DEDUCT COINS</h3><div class="pmAuthHint">Remove any amount, down to a minimum balance of 0.</div><input id="pmAdminTakeAmount" class="pmTextInput" type="number" min="1" max="1000000000" placeholder="Amount"><button class="pmActionButton pmAdminDanger" style="margin-top:8px" onclick="pmAdminTakeCoins()">DEDUCT COINS</button></div></div>`}
+async function pmAdminGiveCoins(){if(!pmAdminTargetId)return;const amount=Math.floor(Number(document.getElementById("pmAdminGiveAmount")?.value));if(!Number.isFinite(amount)||amount<1)return alert("Enter a valid amount.");try{const ref=firebase.firestore().collection("users").doc(pmAdminTargetId);const snap=await ref.get();if(!snap.exists)return alert("Account not found.");await ref.set({coins:Math.max(0,Number(snap.data().coins||0))+amount,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});pmAdminTargetData=(await ref.get()).data();pmAdminShowTab("overview");alert("Gave "+amount.toLocaleString()+" coins. Your balance was not changed.");}catch(e){console.error(e);alert("Could not give coins.");}}
+async function pmAdminTakeCoins(){if(!pmAdminTargetId)return;const amount=Math.floor(Number(document.getElementById("pmAdminTakeAmount")?.value));if(!Number.isFinite(amount)||amount<1)return alert("Enter a valid amount.");try{const ref=firebase.firestore().collection("users").doc(pmAdminTargetId);await firebase.firestore().runTransaction(async tx=>{const snap=await tx.get(ref);if(!snap.exists)throw new Error("MISSING");tx.update(ref,{coins:Math.max(0,Number(snap.data().coins||0)-amount),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});});pmAdminTargetData=(await ref.get()).data();pmAdminShowTab("overview");alert("Deducted "+amount.toLocaleString()+" coins.");}catch(e){console.error(e);alert("Could not deduct coins.");}}
+
+/* ---------- GROUP CHATS ---------- */
+function openGroupChatCreator(){
+    if(!pmAuthUser)return alert("Connect your account first.");
+    hideAllPages();let page=document.getElementById("groupChatCreatePage");if(!page){page=document.createElement("div");page.className="page";page.id="groupChatCreatePage";page.innerHTML=`<div class="secondaryPage"><div class="pageHeader"><h1>NEW <span>GROUP CHAT</span></h1><button class="backButton" onclick="openChatHub()">← CHAT</button></div><div class="pmGroupCard"><input id="pmGroupNameInput" class="pmTextInput" maxlength="40" placeholder="Group name"><div class="pmSmallLabel" style="margin-top:16px">CHOOSE FRIENDS</div><div id="pmGroupFriendsChoices" class="pmGroupCreateGrid"></div><button class="pmActionButton" style="margin-top:16px" onclick="pmCreateGroupChat()">CREATE GROUP CHAT</button></div></div>`;document.body.appendChild(page)}
+    page.classList.add("active");pmRenderGroupFriendChoices();
+}
+async function pmRenderGroupFriendChoices(){const box=document.getElementById("pmGroupFriendsChoices");if(!box)return;const ids=Array.isArray(pmUserData?.friends)?pmUserData.friends:[];if(!ids.length){box.innerHTML='<div class="pmEmpty">Add friends first.</div>';return;}const snaps=await Promise.all(ids.map(id=>firebase.firestore().collection("users").doc(id).get()));box.innerHTML=snaps.filter(s=>s.exists).map(s=>`<label class="pmGroupFriendChoice"><input type="checkbox" value="${s.id}"><span>${escapeHtml(s.data().username||"Player")}</span></label>`).join("")}
+async function pmCreateGroupChat(){const name=String(document.getElementById("pmGroupNameInput")?.value||"").trim()||"GROUP CHAT",ids=[...document.querySelectorAll("#pmGroupFriendsChoices input:checked")].map(x=>x.value);if(!ids.length)return alert("Choose at least one friend.");if(ids.length>19)return alert("A group can have up to 20 people.");const participants=[pmAuthUser.uid,...ids];try{const ref=firebase.firestore().collection("chats").doc();await ref.set({type:"group",name,participants,createdBy:pmAuthUser.uid,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),createdAt:firebase.firestore.FieldValue.serverTimestamp()});openGroupChat(ref.id);}catch(e){console.error(e);alert("Could not create the group chat. Publish the V11 Firestore Rules.");}}
+async function pmRenderGroupChats(){const box=document.getElementById("pmGroupChatList");if(!box||!pmAuthUser)return;try{const snap=await firebase.firestore().collection("chats").where("participants","array-contains",pmAuthUser.uid).limit(50).get();const groups=snap.docs.filter(d=>d.data()?.type==="group");box.innerHTML=groups.length?groups.map(d=>`<div class="pmGroupRow" onclick="openGroupChat('${d.id}')"><div class="pmGroupRowTitle">${escapeHtml(d.data().name||"GROUP CHAT")}</div><div class="pmGroupRowSub">${(d.data().participants||[]).length} members</div></div>`).join(""):'<div class="pmEmpty">No group chats yet.</div>'}catch(e){console.error(e);box.innerHTML='<div class="pmEmpty">Could not load group chats.</div>';}}
+function openChatHub(){hideAllPages();document.getElementById("chatPage")?.classList.add("active");loadChatFriends();pmRenderGroupChats();}
+async function openGroupChat(chatId){if(!pmAuthUser)return;pmActiveGroupId=chatId;pmActiveChatFriendId=null;hideAllPages();document.getElementById("chatPage")?.classList.add("active");if(pmChatUnsubscribe)pmChatUnsubscribe();const ref=firebase.firestore().collection("chats").doc(chatId),snap=await ref.get();if(!snap.exists||!(snap.data().participants||[]).includes(pmAuthUser.uid))return alert("You are not in that group.");const data=snap.data();document.getElementById("pmChatTitle").textContent=data.name||"GROUP CHAT";const input=document.getElementById("pmChatInput"),send=document.getElementById("pmChatSend"),emoji=document.getElementById("pmEmojiButton");input.disabled=false;send.disabled=false;if(emoji)emoji.disabled=false;const messages=document.getElementById("pmChatMessages");pmChatUnsubscribe=ref.collection("messages").orderBy("createdAt","asc").limitToLast(300).onSnapshot(async snapshot=>{messages.innerHTML="";const senderIds=[...new Set(snapshot.docs.map(d=>d.data().sender).filter(Boolean))];const userMap={};await Promise.all(senderIds.map(async id=>{const s=await firebase.firestore().collection("users").doc(id).get();userMap[id]=s.exists?s.data():{};}));snapshot.forEach(doc=>{const d=doc.data(),mine=d.sender===pmAuthUser.uid,wrap=document.createElement("div");wrap.className="pmChatBubbleWrap";const avatarStage=document.createElement("div");avatarStage.className="pmChatMessageAvatarStage";const av=document.createElement("img");av.className="pmChatMessageAvatar";av.src=pmAvatarFor(userMap[d.sender]||{});avatarStage.appendChild(av);if(pmHas67Equipped(userMap[d.sender]||{})){const fx=document.createElement("img");fx.className="pm67Overlay";fx.src=PM_COSMETICS.border67.asset;avatarStage.appendChild(fx);}const bubble=document.createElement("div");bubble.className="pmChatBubble";if(d.replyTo?.text){const q=document.createElement("div");q.className="pmReplyQuote";q.textContent="↪ "+d.replyTo.text;bubble.appendChild(q)}const text=document.createElement("div");text.textContent=d.text||"";const meta=document.createElement("div");meta.className="pmChatBubbleMeta";meta.textContent=userMap[d.sender]?.username||"MEMBER";bubble.append(text,meta);bubble.oncontextmenu=e=>pmShowChatContextMenu(e,doc.id,d);wrap.append(avatarStage,bubble);messages.appendChild(wrap)});messages.scrollTop=messages.scrollHeight},err=>{console.error(err);messages.innerHTML='<div class="pmChatEmpty">Could not load group chat.</div>'});}
+
+/* Branch the existing send function for group chats. */
+const pmV11OldSendChatMessage=sendChatMessage;
+sendChatMessage=async function(){if(pmActiveGroupId){const input=document.getElementById("pmChatInput"),text=String(input?.value||"").trim().slice(0,500);if(!text)return;try{const ref=firebase.firestore().collection("chats").doc(pmActiveGroupId);const payload={sender:pmAuthUser.uid,text,createdAt:firebase.firestore.FieldValue.serverTimestamp()};if(pmReplyToMessage)payload.replyTo={id:pmReplyToMessage.id,text:pmReplyToMessage.text,sender:pmReplyToMessage.sender};await ref.collection("messages").add(payload);await ref.set({updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});input.value="";pmCancelReply();}catch(e){console.error(e);alert("Could not send message.");}return;}return pmV11OldSendChatMessage();};
+
+/* Add group controls to the existing chat page. */
+function pmEnsureGroupChatUI(){const side=document.getElementById("pmChatFriends"),win=document.querySelector("#chatPage .pmChatWindow");if(!side||!win||document.getElementById("pmGroupChatControls"))return;const c=document.createElement("div");c.id="pmGroupChatControls";c.innerHTML=`<button class="pmActionButton" style="width:100%;margin-bottom:10px" onclick="openGroupChatCreator()">➕ NEW GROUP CHAT</button><div class="pmSmallLabel">GROUP CHATS</div><div id="pmGroupChatList" class="pmGroupList"></div>`;side.parentNode.insertBefore(c,side);}
+const pmV10OldLoadChatFriends=loadChatFriends;
+loadChatFriends=async function(){await pmV10OldLoadChatFriends();pmEnsureGroupChatUI();pmRenderGroupChats();};
+const pmV11OldOpenChatWithFriend=openChatWithFriend;
+openChatWithFriend=function(uid){pmActiveGroupId=null;pmV11OldOpenChatWithFriend(uid);};
+
+/* ---------- SECRET REDEEM CODES ---------- */
+const PM_SECRET_CODES={
+    "po2":{type:"coins",amount:20},
+    "multiplymybalanceby2pls":{type:"multiply"},
+    "vmuid":{type:"voidDiscount",amount:100}
+};
+async function pmRedeemSecretCode(code){
+    const cfg=PM_SECRET_CODES[code.toLowerCase()];if(!cfg)return false;
+    const db=firebase.firestore(),userRef=db.collection("users").doc(pmAuthUser.uid),codeRef=db.collection("secretCodes").doc(code.toLowerCase());
+    await db.runTransaction(async tx=>{
+        const [us,cs]=await Promise.all([tx.get(userRef),tx.get(codeRef)]);if(!us.exists)throw new Error("PROFILE_MISSING");if(cs.exists&&cs.data().redeemed)throw new Error("USED_SECRET");const d=us.data(),coins=Math.max(0,Number(d.coins||0));
+        const patch={updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
+        if(cfg.type==="coins")patch.coins=coins+cfg.amount;
+        else if(cfg.type==="multiply")patch.coins=coins*2;
+        else if(cfg.type==="voidDiscount")patch.voidMatrixDiscount=cfg.amount;
+        tx.update(userRef,patch);tx.set(codeRef,{code:code.toLowerCase(),redeemed:true,redeemedBy:pmAuthUser.uid,redeemedAt:firebase.firestore.FieldValue.serverTimestamp(),type:cfg.type},{merge:true});
+    });
+    return true;
+}
+const pmV10OldRedeemShopCode=redeemShopCode;
+redeemShopCode=async function(){
+    if(!pmFirebaseReady||!pmAuthUser)return alert("Connect your account first.");
+    const input=document.getElementById("pmRedeemCodeInput"),code=String(input?.value||"").trim().toLowerCase();if(!code)return alert("Enter a redeem code.");
+    if(code===String(PM_ADMIN_CODE||"").toLowerCase()){pmShowAdminButton(true);return alert("ADMIN option unlocked.");}
+    if(PM_SECRET_CODES[code]){try{await pmRedeemSecretCode(code);if(input)input.value="";await pmLoadOwnProfile();const msg=code==="po2"?"20 coins added!":code==="multiplymybalanceby2pls"?"Your coin balance was doubled!":"Void Matrix is now 100 coins cheaper for you!";return alert(msg);}catch(e){console.error(e);return alert(e.message==="USED_SECRET"?"That secret code has already been used.":"Could not redeem that secret code.");}}
+    return pmV10OldRedeemShopCode();
+};
+
+/* Apply the one-time Void Matrix discount at purchase time. */
+const pmV10OldDbRunPurchase=dbRunPurchase;
+dbRunPurchase=async function(itemId){
+    if(itemId!=="ui_void_matrix")return pmV10OldDbRunPurchase(itemId);
+    const item=PM_SHOP_ITEMS[itemId],db=firebase.firestore(),ref=db.collection("users").doc(pmAuthUser.uid);
+    await db.runTransaction(async tx=>{const snap=await tx.get(ref);if(!snap.exists)throw new Error("PROFILE_MISSING");const d=snap.data(),owned=Array.isArray(d.ownedCosmetics)?d.ownedCosmetics:[];if(owned.includes(itemId))return;const discount=Math.min(item.price,Math.max(0,Number(d.voidMatrixDiscount||0))),price=item.price-discount,coins=Math.max(0,Number(d.coins||0));if(coins<price)throw new Error("NOT_ENOUGH_COINS");tx.update(ref,{coins:coins-price,ownedCosmetics:firebase.firestore.FieldValue.arrayUnion(itemId),voidMatrixDiscount:0,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});});
+};
+const pmV11OldOpenShopCheckout=openShopCheckout;
+openShopCheckout=function(itemId){pmV11OldOpenShopCheckout(itemId);if(itemId==="ui_void_matrix"&&pmUserData?.voidMatrixDiscount){const el=document.getElementById("pmCheckoutItemPrice");if(el)el.textContent="🪙 "+(PM_SHOP_ITEMS[itemId].price-Math.min(PM_SHOP_ITEMS[itemId].price,Number(pmUserData.voidMatrixDiscount||0)))+" (after discount)";}};
+
+/* ---------- PROFILE INIT ---------- */
+const pmV11OldOpenProfile=openProfile;
+openProfile=function(){pmV11OldOpenProfile();setTimeout(()=>{pmEnsureDailyWheel();pmRefreshCoinWheel();},150);};
+const pmV11OldRenderOwnProfile=renderOwnProfile;
+renderOwnProfile=function(){pmV11OldRenderOwnProfile();setTimeout(()=>{pmEnsureDailyWheel();pmRefreshCoinWheel();},0);};
+setInterval(()=>{if(document.getElementById("profilePage")?.classList.contains("active"))pmRefreshCoinWheel();},1000);
+
+/* ---------- ADMIN OVERVIEW INJECTION ---------- */
+const pmV11OldAdminShowTab=pmAdminShowTab;
+pmAdminShowTab=async function(tab){await pmV11OldAdminShowTab(tab);if(tab==="overview"&&pmAdminTargetId){const box=document.getElementById("pmAdminContent");if(box&&!box.querySelector(".pmAdminCoinTools")){box.insertAdjacentHTML("beforeend",pmAdminCoinToolsHTML());}}};
+
+/* Make public profile gift notifications clickable to sender profile. */
+const pmV11OldRenderNotifications=pmRenderNotifications;
+pmRenderNotifications=function(){
+    const box=document.getElementById("pmNotificationsList");
+    if(!box)return;
+    const sorted=pmNotifications.slice().sort((a,b)=>(b.timeMs||0)-(a.timeMs||0));
+    if(!sorted.length){box.innerHTML='<div class="pmEmpty">No new messages.</div>';pmUpdateNotificationBadge();return;}
+    box.innerHTML="";
+    sorted.forEach(item=>{
+        const row=document.createElement("div");row.className="pmNotificationItem"+(item.read?"":" unread");
+        const img=document.createElement("img");img.className="pmNotificationAvatar";img.src=pmAvatarFor(item.friendData||{});
+        const content=document.createElement("div");content.className="pmNotificationContent";
+        const name=document.createElement("div");name.className="pmNotificationName";name.textContent=item.friendData?.username||"Friend";name.appendChild(pmVerificationBadge(item.friendData||{}));
+        const msg=document.createElement("div");msg.className="pmNotificationText";msg.textContent=item.text||"New notification";
+        const time=document.createElement("div");time.className="pmNotificationTime";time.textContent=pmFormatNotificationTime(item.timeMs);content.append(name,msg,time);row.append(img,content);
+        if(!item.read){const dot=document.createElement("span");dot.className="pmNotificationDot";row.appendChild(dot);}
+        row.onclick=async()=>{item.read=true;pmSaveNotificationSeen({...pmNotificationSeenMap(),[item.key]:true});if(item.type==="coinGift"&&item.friendId){try{await firebase.firestore().collection("users").doc(pmAuthUser.uid).collection("notifications").doc(String(item.key).replace(/^gift_/,"")).set({read:true},{merge:true});}catch(e){console.error(e)}openPublicProfile(item.friendId);}else if(item.friendId){openChatWithFriend(item.friendId);}else{pmRenderNotifications();}};
+        box.appendChild(row);
+    });
+    pmUpdateNotificationBadge();
+};
+
+/* Initial setup. */
+setTimeout(()=>{pmEnsureGroupChatUI();pmEnsureDailyWheel();pmRefreshCoinWheel();},500);
+</script>
+
 </body>
 </html>
