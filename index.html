@@ -2218,6 +2218,15 @@ body.voidMatrix .applyTimeButton{background:#c66cff!important;border-color:#c66c
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 
+
+<style id="pmAdminGiftRestoreStyles">
+.pmAdminGiftRestore{margin-top:14px;border:1px solid #351313;border-radius:12px;padding:16px;background:#030303;}
+.pmAdminGiftRestore h3{margin:0 0 7px;color:#fff;font-size:16px;}
+.pmAdminGiftRestore .pmGiftRestoreRow{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;margin-top:10px;}
+.pmAdminGiftRestore .pmGiftRestoreRow input{margin-top:0;}
+@media(max-width:700px){.pmAdminGiftRestore .pmGiftRestoreRow{grid-template-columns:1fr;}}
+</style>
+
 </head>
 
 
@@ -2944,6 +2953,7 @@ body.voidMatrix .applyTimeButton{background:#c66cff!important;border-color:#c66c
                 <button class="pmAdminTab" onclick="pmAdminShowTab('friends')">FRIENDS</button>
                 <button class="pmAdminTab" onclick="pmAdminShowTab('items')">OWNED ITEMS</button>
                 <button class="pmAdminTab" onclick="pmAdminShowTab('tests')">CPS RESULTS</button>
+                <button class="pmAdminTab" onclick="pmAdminShowTab('delete')">SELECTIVE DELETE</button>
             </div>
             <div id="pmAdminContent"></div>
         </div>
@@ -6278,7 +6288,8 @@ async function pmPurchaseItem(itemId, asGift=false){
     const item=PM_SHOP_ITEMS[itemId];
     if(!item)return false;
     if(!pmFirebaseReady||!pmAuthUser||!pmUserData){alert("Your online account is not connected yet.");return false;}
-    if(pmOwn(itemId)){alert("You already own this item.");return false;}
+    // Normal purchases are blocked once owned; gift-code purchases remain available.
+    if(pmOwn(itemId) && !asGift){alert("You already own this item. You can still buy a redeemable gift code for a friend.");return false;}
     try{
         const db=firebase.firestore(),ref=db.collection("users").doc(pmAuthUser.uid);
         if(asGift){
@@ -6339,10 +6350,15 @@ async function redeemShopCode(){
             const item=PM_SHOP_ITEMS[gift.itemId];if(!item)throw new Error("INVALID_ITEM");
             const userSnap=await tx.get(userRef);if(!userSnap.exists)throw new Error("PROFILE_MISSING");
             const owned=Array.isArray(userSnap.data().ownedCosmetics)?userSnap.data().ownedCosmetics:[];
-            if(owned.includes(item.id))throw new Error("ALREADY_OWNED");
-            tx.update(userRef,{ownedCosmetics:firebase.firestore.FieldValue.arrayUnion(item.id),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
-            tx.update(codeRef,{redeemed:true,redeemedBy:pmAuthUser.uid,redeemedAt:firebase.firestore.FieldValue.serverTimestamp()});
+            const alreadyOwned=owned.includes(item.id);
+            if(!alreadyOwned){
+                tx.update(userRef,{ownedCosmetics:firebase.firestore.FieldValue.arrayUnion(item.id),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+            }
+            // A redeemable code is single-use even if the recipient already owns the item.
+            // In that case the code is consumed and the item is simply a waste, as requested.
+            tx.update(codeRef,{redeemed:true,redeemedBy:pmAuthUser.uid,redeemedAt:firebase.firestore.FieldValue.serverTimestamp(),redeemedAlreadyOwned:alreadyOwned});
             itemName=item.name;
+            if(alreadyOwned) itemName += " (you already owned it; the code was consumed)";
         });
         input.value="";pmShowAdminButton(false);await pmLoadOwnProfile();alert(itemName+" redeemed successfully!");
     }catch(err){
@@ -6870,6 +6886,7 @@ function pmAdminShowTab(tab){
     else if(tab==="items") pmAdminRenderItems(box,data);
     else if(tab==="friends") pmAdminRenderFriends(box,data);
     else if(tab==="messages") pmAdminRenderMessages(box);
+    else if(tab==="delete") pmAdminRenderSelectiveDelete(box,data);
 }
 function pmAdminRenderTests(box,data){
     const tests=Array.isArray(data.publicTestHistory)?data.publicTestHistory:[];
@@ -6950,6 +6967,49 @@ async function pmAdminDeleteTest(testId){
 async function pmAdminDeleteMessage(chatId,messageId){if(!confirm("Delete this message?"))return;try{await firebase.firestore().collection("chats").doc(chatId).collection("messages").doc(messageId).delete();pmAdminShowTab("messages");}catch(e){console.error(e);alert("Could not delete message.");}}
 async function pmAdminRemoveFriend(friendId){if(!confirm("Remove this friendship?"))return;try{const db=firebase.firestore(),batch=db.batch();batch.update(db.collection("users").doc(pmAdminTargetId),{friends:firebase.firestore.FieldValue.arrayRemove(friendId)});batch.update(db.collection("users").doc(friendId),{friends:firebase.firestore.FieldValue.arrayRemove(pmAdminTargetId)});await batch.commit();pmAdminTargetData=(await db.collection("users").doc(pmAdminTargetId).get()).data();pmAdminShowTab("friends");}catch(e){console.error(e);alert("Could not remove friend.");}}
 async function pmAdminClearItems(){if(!confirm("Clear all owned cosmetics and equipped cosmetic settings?"))return;try{const ref=firebase.firestore().collection("users").doc(pmAdminTargetId);await ref.set({ownedCosmetics:[],equippedBorder:"",equippedUI:"default",updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});pmAdminTargetData=(await ref.get()).data();pmAdminShowTab("items");}catch(e){console.error(e);alert("Could not clear owned items.");}}
+function pmAdminRenderSelectiveDelete(box,data){
+    const coins=Math.max(0,Number(data?.coins||0));
+    const owned=Array.isArray(data?.ownedCosmetics)?data.ownedCosmetics.length:0;
+    const friends=Array.isArray(data?.friends)?data.friends.length:0;
+    const tests=Array.isArray(data?.publicTestHistory)?data.publicTestHistory.length:0;
+    box.innerHTML=`
+      <div class="pmAuthHint">Delete <strong>only</strong> the category you choose. The other account data stays untouched.</div>
+      <div class="pmAdminSelectiveGrid">
+        <div class="pmAdminSelectiveCard"><div class="pmAdminRowTitle">🪙 COINS ONLY</div><div class="pmAdminRowSub">Current balance: ${coins.toLocaleString()} coins. Owned items, friends and CPS results stay intact.</div><button class="pmActionButton pmAdminDanger" onclick="pmAdminDeleteCoinsOnly()">DELETE COINS ONLY</button></div>
+        <div class="pmAdminSelectiveCard"><div class="pmAdminRowTitle">🎨 OWNED ITEMS ONLY</div><div class="pmAdminRowSub">${owned} owned cosmetic item(s). Coins and other account data stay intact.</div><button class="pmActionButton pmAdminDanger" onclick="pmAdminClearItems()">DELETE OWNED ITEMS ONLY</button></div>
+        <div class="pmAdminSelectiveCard"><div class="pmAdminRowTitle">👥 FRIENDS ONLY</div><div class="pmAdminRowSub">${friends} friend(s). Removes the friendship from both accounts.</div><button class="pmActionButton pmAdminDanger" onclick="pmAdminDeleteFriendsOnly()">DELETE FRIENDS ONLY</button></div>
+        <div class="pmAdminSelectiveCard"><div class="pmAdminRowTitle">📊 CPS RESULTS ONLY</div><div class="pmAdminRowSub">${tests} stored result(s). CPS statistics are recalculated.</div><button class="pmActionButton pmAdminDanger" onclick="pmAdminDeleteAllTestsOnly()">DELETE CPS RESULTS ONLY</button></div>
+        <div class="pmAdminSelectiveCard"><div class="pmAdminRowTitle">💬 MESSAGES ONLY</div><div class="pmAdminRowSub">Deletes messages from chats involving this account. Account, coins and items remain.</div><button class="pmActionButton pmAdminDanger" onclick="pmAdminDeleteMessagesOnly()">DELETE MESSAGES ONLY</button></div>
+        <div class="pmAdminSelectiveCard"><div class="pmAdminRowTitle">🛒 EQUIPPED COSMETICS ONLY</div><div class="pmAdminRowSub">Unequips the UI and border without deleting what the player owns.</div><button class="pmActionButton pmAdminDanger" onclick="pmAdminUnequipOnly()">UNEQUIP ONLY</button></div>
+      </div>`;
+}
+async function pmAdminDeleteCoinsOnly(){
+    if(!pmAdminTargetId)return;if(!confirm("Set this player's coins to 0? Owned items and all other account data will remain."))return;
+    try{const ref=firebase.firestore().collection("users").doc(pmAdminTargetId);await ref.update({coins:0,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});pmAdminTargetData=(await ref.get()).data();pmAdminShowTab("delete");alert("Coins deleted. Owned items and the rest of the account were left untouched.");}catch(e){console.error(e);alert("Could not delete coins only.");}
+}
+async function pmAdminDeleteFriendsOnly(){
+    if(!pmAdminTargetId)return;if(!confirm("Remove this player's friendships only? Coins, items, CPS and account data will remain."))return;
+    try{const db=firebase.firestore(),ref=db.collection("users").doc(pmAdminTargetId),snap=await ref.get();if(!snap.exists)throw new Error("MISSING");const ids=Array.isArray(snap.data()?.friends)?snap.data().friends:[];
+      const batch=db.batch();batch.update(ref,{friends:[],updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+      for(const fid of ids){const fref=db.collection("users").doc(fid);const fs=await fref.get();if(fs.exists)batch.update(fref,{friends:firebase.firestore.FieldValue.arrayRemove(pmAdminTargetId),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});}
+      await batch.commit();pmAdminTargetData=(await ref.get()).data();pmAdminShowTab("delete");alert("Friends removed. Coins, items and CPS results were left untouched.");
+    }catch(e){console.error(e);alert("Could not delete friends only.");}
+}
+async function pmAdminDeleteAllTestsOnly(){
+    if(!pmAdminTargetId)return;if(!confirm("Delete ALL CPS results for this player? Coins and owned items will remain."))return;
+    try{const ref=firebase.firestore().collection("users").doc(pmAdminTargetId);await ref.update({publicTestHistory:[],publicTests:0,publicAverageCPS:0,publicHighestCPS:0,tests:0,averageCPS:0,highestCPS:0,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});pmAdminTargetData=(await ref.get()).data();pmAdminShowTab("delete");alert("CPS results deleted. Coins and owned items were left untouched.");}catch(e){console.error(e);alert("Could not delete CPS results only.");}
+}
+async function pmAdminDeleteMessagesOnly(){
+    if(!pmAdminTargetId)return;if(!confirm("Delete messages from this player's chats? The account, coins, items and friends will remain."))return;
+    try{const db=firebase.firestore(),chats=await db.collection("chats").where("participants","array-contains",pmAdminTargetId).limit(100).get();let count=0;
+      for(const c of chats.docs){const msgs=await c.ref.collection("messages").limit(500).get();if(msgs.empty)continue;const batch=db.batch();msgs.forEach(m=>{batch.delete(m.ref);count++;});await batch.commit();}
+      pmAdminShowTab("delete");alert("Deleted "+count.toLocaleString()+" message(s). Account data, coins and owned items were left untouched.");
+    }catch(e){console.error(e);alert("Could not delete messages only.");}
+}
+async function pmAdminUnequipOnly(){
+    if(!pmAdminTargetId)return;if(!confirm("Unequip this player's UI and border only? Owned items will NOT be deleted."))return;
+    try{const ref=firebase.firestore().collection("users").doc(pmAdminTargetId);await ref.update({equippedBorder:"",equippedUI:"default",updatedAt:firebase.firestore.FieldValue.serverTimestamp()});pmAdminTargetData=(await ref.get()).data();pmAdminShowTab("delete");alert("UI and border unequipped. Owned items remain owned.");}catch(e){console.error(e);alert("Could not unequip cosmetics.");}
+}
 async function pmAdminDeleteAccountData(){
     if(!confirm("DELETE ALL ACCOUNT DATA for this player? This cannot be undone."))return;
     try{
@@ -7311,6 +7371,7 @@ pmV6SyncShopPrices();
 .pmWheelInfo{flex:1;min-width:240px}.pmWheelReward{font-size:34px;font-weight:1000;color:#fff;margin:10px 0}.pmWheelCountdown{color:#ff7373;font-weight:800}
 .pmGroupCreateGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:14px}.pmGroupFriendChoice{display:flex;align-items:center;gap:10px;padding:12px;border:1px solid #321313;border-radius:10px;background:#020202;cursor:pointer}.pmGroupFriendChoice input{accent-color:#ff1717}.pmGroupList{display:grid;gap:8px;margin-top:14px}.pmGroupRow{padding:12px;border:1px solid #321313;border-radius:10px;background:#030303;cursor:pointer}.pmGroupRow:hover{border-color:#ff1717}.pmGroupRowTitle{font-weight:1000;color:#fff}.pmGroupRowSub{font-size:11px;color:#817474;margin-top:3px}
 .pmAdminCoinTools{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.pmAdminCoinTool{border:1px solid #351313;border-radius:10px;padding:14px;background:#030303}.pmAdminCoinTool h3{margin:0 0 8px;color:#fff}.pmAdminCoinTool input{margin-top:6px}
+.pmAdminSelectiveGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:14px}.pmAdminSelectiveCard{border:1px solid #351313;border-radius:12px;padding:16px;background:#030303;display:flex;flex-direction:column;gap:9px}.pmAdminSelectiveCard .pmActionButton{margin-top:auto}@media(max-width:700px){.pmAdminSelectiveGrid{grid-template-columns:1fr}}
 @media(max-width:700px){.pmAdminCoinTools{grid-template-columns:1fr}.pmWheel{width:180px;height:180px}}
 </style>
 
@@ -7480,6 +7541,47 @@ dbRunPurchase=async function(itemId){
 const pmV11OldOpenShopCheckout=openShopCheckout;
 openShopCheckout=function(itemId){pmV11OldOpenShopCheckout(itemId);if(itemId==="ui_void_matrix"&&pmUserData?.voidMatrixDiscount){const el=document.getElementById("pmCheckoutItemPrice");if(el)el.textContent="🪙 "+(PM_SHOP_ITEMS[itemId].price-Math.min(PM_SHOP_ITEMS[itemId].price,Number(pmUserData.voidMatrixDiscount||0)))+" (after discount)";}};
 
+/* ---------- GIFT-CODE-ONLY REBUY FOR OWNED ITEMS ---------- */
+const pmV19BaseOpenShopCheckout = openShopCheckout;
+openShopCheckout = function(itemId){
+    pmV19BaseOpenShopCheckout(itemId);
+    const item = PM_SHOP_ITEMS[itemId];
+    if(!item) return;
+    const owned = pmOwn(itemId);
+    const buyChoice = document.querySelector('#shopCheckoutPage .pmCheckoutChoice:first-child');
+    const giftChoice = document.querySelector('#shopCheckoutPage .pmCheckoutChoice:nth-child(2)');
+    if(buyChoice){
+        buyChoice.style.display = owned ? 'none' : '';
+    }
+    if(giftChoice){
+        giftChoice.style.display = '';
+        const title = giftChoice.querySelector('h3');
+        const desc = giftChoice.querySelector('p');
+        const button = giftChoice.querySelector('button');
+        if(owned){
+            if(title) title.textContent = '🎁 GIVE REDEEMABLE CODE';
+            if(desc) desc.textContent = 'You already own this item. You can still pay for a single-use code and give it to a friend.';
+            if(button) button.textContent = 'GENERATE GIFT CODE • ' + item.price + ' 🪙';
+        }else{
+            if(title) title.textContent = '🎁 GIVE REDEEMABLE CODE';
+            if(desc) desc.textContent = 'Pay for the item and generate a single-use code that another player can redeem.';
+            if(button) button.textContent = 'GENERATE GIFT CODE';
+        }
+    }
+    const hint = document.querySelector('#shopCheckoutPage .pmCheckoutCard .pmAuthHint');
+    if(hint) hint.textContent = owned ? 'You already own this item, so only the redeemable gift-code option is available.' : 'Choose one option below. Both options charge the item price shown above.';
+};
+
+/* Keep owned shop buttons usable for gift-code purchases while preserving Equip/Unequip. */
+const pmV19BaseRenderShop = pmRenderShop;
+pmRenderShop = function(){
+    pmV19BaseRenderShop();
+    const buy=document.getElementById('pm67BuyButton');
+    const voidBuy=document.getElementById('pmVoidBuyButton');
+    if(buy && pmIsOwnedCosmetic('border_67')){buy.disabled=false;buy.textContent='GIFT CODE • 300 🪙';}
+    if(voidBuy && pmOwn('ui_void_matrix')){voidBuy.disabled=false;voidBuy.textContent='GIFT CODE • 1500 🪙';}
+};
+
 /* ---------- PROFILE INIT ---------- */
 const pmV11OldOpenProfile=openProfile;
 openProfile=function(){pmV11OldOpenProfile();setTimeout(()=>{pmEnsureDailyWheel();pmRefreshCoinWheel();},150);};
@@ -7546,6 +7648,50 @@ setTimeout(()=>{pmEnsureGroupChatUI();pmEnsureDailyWheel();pmRefreshCoinWheel();
   if(document.body) obs.observe(document.body,{attributes:true,attributeFilter:["class"]});
 })();
 </script>
+
+<script id="pmAdminGiftRestoreScript">
+/* V18 — restore an explicit Admin GIFT COINS control without changing existing admin tools. */
+function pmAdminGiftCoinsHTML(){
+  return `<div class="pmAdminGiftRestore">
+    <h3>🎁 GIFT COINS</h3>
+    <div class="pmAuthHint">Gift any amount to the selected account. Nothing is deducted from your Admin balance.</div>
+    <div class="pmGiftRestoreRow">
+      <input id="pmAdminGiftAmount" class="pmTextInput" type="number" min="1" max="1000000000" step="1" placeholder="Amount to gift">
+      <button class="pmActionButton" onclick="pmAdminGiftCoins()">🎁 GIFT COINS</button>
+    </div>
+  </div>`;
+}
+async function pmAdminGiftCoins(){
+  if(!pmAdminTargetId)return alert("Look up an account first.");
+  const amount=Math.floor(Number(document.getElementById("pmAdminGiftAmount")?.value));
+  if(!Number.isFinite(amount)||amount<1)return alert("Enter a valid amount.");
+  if(amount>1000000000)return alert("That amount is too large.");
+  try{
+    const ref=firebase.firestore().collection("users").doc(pmAdminTargetId);
+    await firebase.firestore().runTransaction(async tx=>{
+      const snap=await tx.get(ref);
+      if(!snap.exists)throw new Error("ACCOUNT_NOT_FOUND");
+      const current=Math.max(0,Number(snap.data()?.coins||0));
+      tx.update(ref,{coins:current+amount,lastAdminCoinGift:{from:pmAuthUser.uid,amount,createdAt:firebase.firestore.FieldValue.serverTimestamp()},updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+    });
+    pmAdminTargetData=(await ref.get()).data();
+    pmAdminShowTab("overview");
+    alert("Gifted "+amount.toLocaleString()+" coins. Your Admin balance was not changed.");
+  }catch(e){
+    console.error("Admin gift coins failed:",e);
+    alert(e.message==="ACCOUNT_NOT_FOUND"?"Account not found.":"Could not gift coins.");
+  }
+}
+const pmV18OldAdminShowTab=pmAdminShowTab;
+pmAdminShowTab=async function(tab){
+  await pmV18OldAdminShowTab(tab);
+  if(tab==="overview"&&pmAdminTargetId){
+    const box=document.getElementById("pmAdminContent");
+    if(box&&!box.querySelector(".pmAdminGiftRestore"))box.insertAdjacentHTML("beforeend",pmAdminGiftCoinsHTML());
+  }
+};
+</script>
+
 </body>
 </html>
 
@@ -7825,3 +7971,25 @@ pmStartNotificationListeners=function(){
 setTimeout(()=>{if(pmAuthUser)pmStartPresence();},1200);
 setInterval(()=>{if(pmAuthUser&&pmFirebaseReady)pmStartPresence();},30000);
 </script>
+
+/* FINAL V19 SHOP GIFT-CODE RULES */
+(function(){
+    const baseSync = typeof pmV6SyncShopPrices === 'function' ? pmV6SyncShopPrices : null;
+    if(baseSync){
+        pmV6SyncShopPrices = function(){
+            baseSync();
+            const b=document.getElementById('pm67BuyButton');
+            const v=document.getElementById('pmVoidBuyButton');
+            if(b && pmIsOwnedCosmetic('border_67')){b.disabled=false;b.textContent='GIFT CODE • 300 🪙';}
+            if(v && pmOwn('ui_void_matrix')){v.disabled=false;v.textContent='GIFT CODE • 1500 🪙';}
+        };
+    }
+    const baseExtra = typeof pmRenderExtraShop === 'function' ? pmRenderExtraShop : null;
+    if(baseExtra){
+        pmRenderExtraShop = function(){
+            baseExtra();
+            const v=document.getElementById('pmVoidBuyButton');
+            if(v && pmOwn('ui_void_matrix')){v.disabled=false;v.textContent='GIFT CODE • 1500 🪙';}
+        };
+    }
+})();
