@@ -1947,7 +1947,9 @@ body.neonPulse .pmShopPrice{color:#8ff7ff;}
 .pmVoidShopPreview{background:radial-gradient(circle at 50% 35%,rgba(125,0,255,.22),#020204 60%,#000);border-color:#4c2875;}
 .pmVoidPreviewText{text-align:center;font-size:25px;line-height:.9;font-weight:1000;font-style:italic;letter-spacing:4px;color:#c66cff;text-shadow:0 0 8px #8b2cff,0 0 24px rgba(139,44,255,.7);}
 .pmVoidPreviewText span{font-size:13px;letter-spacing:6px;color:#7cffff;}
-body.voidMatrix{--voidAccent:#c66cff;--voidBorder:#4c2875;--voidPanel:#08050d;background:#020204!important;font-family:Arial,Helvetica,sans-serif;}
+/* Void Matrix runtime theme guard: this class is applied directly to <body> when the UI is equipped. */
+body.voidMatrix{--voidAccent:#c66cff!important;--voidBorder:#4c2875!important;--voidPanel:#08050d!important;--voidBackground:#020204!important;background:#020204!important;color:#f5eaff!important;font-family:Arial,Helvetica,sans-serif!important;}
+
 body.voidMatrix header{border-bottom-color:var(--voidBorder)!important;box-shadow:0 0 25px rgba(139,44,255,.18)!important;}
 body.voidMatrix .logoRed,body.voidMatrix .title h1 span,body.voidMatrix .title p,body.voidMatrix .cpsStatus,body.voidMatrix .reactionMessage,body.voidMatrix .specialMessage,body.voidMatrix .chartTitle,body.voidMatrix .optionSectionTitle,body.voidMatrix .pageHeader h1 span,body.voidMatrix .statValue,body.voidMatrix .historyStatValue,body.voidMatrix .cpsNumber,body.voidMatrix .difficultyValue,body.voidMatrix .cooldownMessage,body.voidMatrix .historyScore{color:var(--voidAccent)!important;text-shadow:0 0 8px var(--voidAccent),0 0 22px rgba(139,44,255,.35)!important;}
 body.voidMatrix .headerButton,body.voidMatrix .backButton,body.voidMatrix .stat,body.voidMatrix .historyStat,body.voidMatrix .chartBox,body.voidMatrix .customTimeBox,body.voidMatrix .toggleRow,body.voidMatrix .mouseOption,body.voidMatrix .clickArea,body.voidMatrix .timeBtn,body.voidMatrix .trackerDifficulty,body.voidMatrix .uiOption,body.voidMatrix .pmCollectionCard,body.voidMatrix .pmCollectionItem,body.voidMatrix .pmNotificationPanel{background:var(--voidPanel)!important;border-color:var(--voidBorder)!important;}
@@ -3260,6 +3262,28 @@ body.neonPulse .pmEmojiChoice:hover,body.neonPulse .pmChatContextMenu button:hov
 
     </div>
 
+
+    <!-- MESSAGE NOTIFICATION SOUND -->
+
+    <div class="optionSection">
+
+        <div class="optionSectionTitle">
+            MESSAGE SOUND
+        </div>
+
+        <div class="toggleRow">
+            <div class="toggleText">
+                <h3>Notification Sound</h3>
+                <p>PLAY A SOUND WHEN YOU RECEIVE A NEW MESSAGE</p>
+            </div>
+            <label class="toggle">
+                <input type="checkbox" id="pmMessageSoundToggle" onchange="pmSetMessageSound(this.checked)">
+                <span class="toggleSlider"></span>
+            </label>
+        </div>
+        <div class="pmAuthHint">A short notification chime plays only for new incoming messages. Your own messages never trigger it.</div>
+
+    </div>
 
     <!-- REACTIONS -->
 
@@ -5927,7 +5951,7 @@ async function pmSignup(){
     try{const auth=firebase.auth();localStorage.removeItem("promouserSignedOut");if(auth.currentUser?.isAnonymous){const cred=firebase.auth.EmailAuthProvider.credential(email,password);await auth.currentUser.linkWithCredential(cred);alert("Account created! Your existing ProMouser profile was kept.");}else{await auth.createUserWithEmailAndPassword(email,password);alert("Account created!");}}catch(err){console.error(err);if(err.code==="auth/email-already-in-use")alert("That email already has an account. Use Log In instead.");else alert("Could not create the account: "+(err.message||err.code));}}
 async function pmLogin(){const email=String(document.getElementById("pmLoginEmail")?.value||"").trim(),password=String(document.getElementById("pmLoginPassword")?.value||"");if(!email||!password)return alert("Enter your email and password.");try{localStorage.removeItem("promouserSignedOut");await firebase.auth().signInWithEmailAndPassword(email,password);alert("Logged in!");}catch(err){console.error(err);alert("Could not log in. Check your email and password.");}}
 async function pmResetPassword(){const email=String(document.getElementById("pmLoginEmail")?.value||"").trim();if(!email)return alert("Enter your email first.");try{await firebase.auth().sendPasswordResetEmail(email);alert("Password reset email sent.");}catch(err){console.error(err);alert("Could not send the reset email.");}}
-async function pmLogout(){if(pmAuthUser?.isAnonymous)return alert("Create an email/password login first so you can safely sign back in later.");try{localStorage.setItem("promouserSignedOut","1");if(pmChatUnsubscribe)pmChatUnsubscribe();await firebase.auth().signOut();hideAllPages();document.getElementById("testPage").classList.add("active");alert("Logged out.");}catch(err){console.error(err);alert("Could not log out.");}}
+async function pmLogout(){if(pmAuthUser?.isAnonymous)return alert("Create an email/password login first so you can safely sign back in later.");try{localStorage.setItem("promouserSignedOut","1");if(pmChatUnsubscribe)pmChatUnsubscribe();if(window.pmGroupSoundUnsubs){window.pmGroupSoundUnsubs.forEach(u=>{try{u();}catch(e){}});window.pmGroupSoundUnsubs=[];}await firebase.auth().signOut();hideAllPages();document.getElementById("testPage").classList.add("active");alert("Logged out.");}catch(err){console.error(err);alert("Could not log out.");}}
 
 async function togglePrivateMode(){
     const toggle=document.getElementById("privateModeToggle");
@@ -6203,16 +6227,27 @@ function pmOwn(id){
 
 function pmApplyEquippedUI(){
     const equipped=pmUserData?.equippedUI||"default";
-    document.body.classList.remove("voidMatrix");
-    document.body.classList.toggle("voidMatrix",equipped==="ui_void_matrix");
-    document.body.classList.toggle("neonPulse",equipped==="neon");
-    // Keep the existing UI selector synchronized without changing its original behavior.
+    const body=document.body;
+    if(!body)return;
+
+    // Always clear the two theme classes first, then apply exactly one theme.
+    body.classList.remove("voidMatrix","neonPulse");
+    if(equipped==="ui_void_matrix") body.classList.add("voidMatrix");
+    else if(equipped==="neon") body.classList.add("neonPulse");
+
+    // Keep the legacy selector synchronized without letting it overwrite Void Matrix.
     const defaultOption=document.getElementById("defaultUIOption");
     const neonOption=document.getElementById("neonUIOption");
-    if(defaultOption&&neonOption&&equipped!=="ui_void_matrix"){
-        defaultOption.classList.toggle("selected",equipped==="default");
-        neonOption.classList.toggle("selected",equipped==="neon");
-    }
+    if(defaultOption) defaultOption.classList.toggle("selected",equipped==="default");
+    if(neonOption) neonOption.classList.toggle("selected",equipped==="neon");
+
+    // Re-apply on the next paint as a guard against older UI code resetting the body class.
+    if(equipped==="ui_void_matrix") requestAnimationFrame(()=>{
+        if(pmUserData?.equippedUI==="ui_void_matrix"){
+            body.classList.remove("neonPulse");
+            body.classList.add("voidMatrix");
+        }
+    });
 }
 
 function pmRenderCollection(){
@@ -6281,12 +6316,27 @@ async function pmEquipUI(id){
     const current=pmUserData.equippedUI||"default";
     const next=current===id?"default":id;
     try{
+        // Update local state immediately so the visual theme changes without waiting
+        // for a Firestore read/render cycle.
+        pmUserData.equippedUI=next;
+        pmApplyEquippedUI();
+
         await firebase.firestore().collection("users").doc(pmAuthUser.uid).set({
             equippedUI:next,
             updatedAt:firebase.firestore.FieldValue.serverTimestamp()
         },{merge:true});
+
+        // Reload persisted data, then explicitly re-apply the selected theme.
         await pmLoadOwnProfile();
-    }catch(err){console.error(err);alert("Could not change your UI.");}
+        pmApplyEquippedUI();
+        pmRenderCollection();
+        pmRenderExtraShop();
+    }catch(err){
+        console.error(err);
+        // If the save fails, restore the last persisted value.
+        try{await pmLoadOwnProfile();pmApplyEquippedUI();}catch(_){}
+        alert("Could not change your UI.");
+    }
 }
 
 async function pmEquipAvatar(id){
@@ -6341,8 +6391,8 @@ async function buyVoidUI(){
 }
 
 async function toggleVoidUI(){
-    const equipped=pmUserData?.equippedUI==="ui_void_matrix";
-    await pmEquipUI(equipped?"ui_void_matrix":"ui_void_matrix");
+    if(!pmUserData?.ownedCosmetics?.includes("ui_void_matrix"))return alert("Buy the Void Matrix UI from the Shop first.");
+    await pmEquipUI("ui_void_matrix");
 }
 
 function pmRenderExtraShop(){
@@ -6395,6 +6445,62 @@ openShop=function(){
     pmOriginalOpenShop();
     setTimeout(()=>{pmRenderExtraShop();pmRenderCollection();},50);
 };
+
+/* =========================================================
+   MESSAGE NOTIFICATION SOUND
+========================================================= */
+const PM_MESSAGE_SOUND_KEY = "promouserMessageSoundEnabled";
+let pmMessageAudioContext = null;
+let pmMessageSoundUnlocked = false;
+
+function pmMessageSoundEnabled(){
+    return localStorage.getItem(PM_MESSAGE_SOUND_KEY) !== "0";
+}
+
+function pmSetMessageSound(enabled){
+    localStorage.setItem(PM_MESSAGE_SOUND_KEY, enabled ? "1" : "0");
+    if(enabled) pmUnlockMessageSound();
+}
+
+function pmUnlockMessageSound(){
+    try{
+        const AC=window.AudioContext||window.webkitAudioContext;
+        if(!AC)return;
+        if(!pmMessageAudioContext)pmMessageAudioContext=new AC();
+        if(pmMessageAudioContext.state==="suspended")pmMessageAudioContext.resume();
+        pmMessageSoundUnlocked=true;
+    }catch(e){console.warn("Message sound unavailable",e);}
+}
+
+function pmPlayMessageSound(){
+    if(!pmMessageSoundEnabled())return;
+    try{
+        pmUnlockMessageSound();
+        const ctx=pmMessageAudioContext;if(!ctx||ctx.state!=="running")return;
+        const now=ctx.currentTime;
+        const gain=ctx.createGain();
+        const osc=ctx.createOscillator();
+        osc.type="sine";
+        osc.frequency.setValueAtTime(880,now);
+        osc.frequency.exponentialRampToValueAtTime(1174.66,now+0.09);
+        gain.gain.setValueAtTime(0.0001,now);
+        gain.gain.exponentialRampToValueAtTime(0.13,now+0.012);
+        gain.gain.exponentialRampToValueAtTime(0.0001,now+0.28);
+        osc.connect(gain);gain.connect(ctx.destination);
+        osc.start(now);osc.stop(now+0.3);
+    }catch(e){console.warn("Could not play message notification sound",e);}
+}
+
+function pmInitMessageSound(){
+    const toggle=document.getElementById("pmMessageSoundToggle");
+    if(toggle)toggle.checked=pmMessageSoundEnabled();
+    const unlock=()=>{if(pmMessageSoundEnabled())pmUnlockMessageSound();};
+    document.addEventListener("pointerdown",unlock,{once:false,passive:true});
+    document.addEventListener("keydown",unlock,{once:false,passive:true});
+}
+
+/* Initialize the browser audio context after the page has loaded. */
+setTimeout(pmInitMessageSound,500);
 
 /* =========================================================
    MESSAGE NOTIFICATIONS
@@ -6473,11 +6579,21 @@ function pmStartNotificationListeners(){
                 const key=chatId+"_"+doc.id;
                 const friendSnap=await firebase.firestore().collection("users").doc(friendId).get();
                 const friendData=friendSnap.exists?friendSnap.data():{};
+                const alreadySeen=!!seen[key];
                 pmAddOrUpdateNotification({
                     key,friendId,friendData,text:d.text||"New message",
                     timeMs:d.createdAt?.toMillis?d.createdAt.toMillis():Date.now(),
-                    read:!!seen[key]
+                    read:alreadySeen
                 });
+                /* Fire only when this snapshot introduces a genuinely new message.
+                   The first snapshot after page load is silent. */
+                const initializedKey="promouserSoundInit_"+chatId;
+                if(!sessionStorage.getItem(initializedKey)){
+                    sessionStorage.setItem(initializedKey,doc.id);
+                }else if(sessionStorage.getItem(initializedKey)!==doc.id){
+                    sessionStorage.setItem(initializedKey,doc.id);
+                    pmPlayMessageSound();
+                }
             },err=>console.error("Notification listener:",err));
         pmNotificationUnsubs.push(unsubscribe);
     });
@@ -6503,14 +6619,21 @@ const pmOriginalLoadOwnProfile=pmLoadOwnProfile;
 pmLoadOwnProfile=async function(){
     await pmOriginalLoadOwnProfile();
     pmStartNotificationListeners();
+    pmStartGroupMessageSoundListeners();
     pmRenderCollection();
     pmRenderExtraShop();
 };
 
 /* Initial UI/notification state once the page is ready. */
 setTimeout(()=>{
-    if(pmUserData){pmApplyEquippedUI();pmRenderCollection();pmRenderExtraShop();pmStartNotificationListeners();}
+    if(pmUserData){pmApplyEquippedUI();pmRenderCollection();pmRenderExtraShop();pmStartNotificationListeners();pmStartGroupMessageSoundListeners();}
 },300);
+
+// Final Void Matrix boot check. If the saved account says it is equipped,
+// apply the theme after all legacy scripts have finished initializing.
+setTimeout(()=>{
+    if(pmUserData?.equippedUI==="ui_void_matrix") pmApplyEquippedUI();
+},1200);
 
 
 /* =========================================================
@@ -7144,7 +7267,28 @@ async function pmRenderGroupFriendChoices(){const box=document.getElementById("p
 async function pmCreateGroupChat(){const name=String(document.getElementById("pmGroupNameInput")?.value||"").trim()||"GROUP CHAT",ids=[...document.querySelectorAll("#pmGroupFriendsChoices input:checked")].map(x=>x.value);if(!ids.length)return alert("Choose at least one friend.");if(ids.length>19)return alert("A group can have up to 20 people.");const participants=[pmAuthUser.uid,...ids];try{const ref=firebase.firestore().collection("chats").doc();await ref.set({type:"group",name,participants,createdBy:pmAuthUser.uid,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),createdAt:firebase.firestore.FieldValue.serverTimestamp()});openGroupChat(ref.id);}catch(e){console.error(e);alert("Could not create the group chat. Publish the V11 Firestore Rules.");}}
 async function pmRenderGroupChats(){const box=document.getElementById("pmGroupChatList");if(!box||!pmAuthUser)return;try{const snap=await firebase.firestore().collection("chats").where("participants","array-contains",pmAuthUser.uid).limit(50).get();const groups=snap.docs.filter(d=>d.data()?.type==="group");box.innerHTML=groups.length?groups.map(d=>`<div class="pmGroupRow" onclick="openGroupChat('${d.id}')"><div class="pmGroupRowTitle">${escapeHtml(d.data().name||"GROUP CHAT")}</div><div class="pmGroupRowSub">${(d.data().participants||[]).length} members</div></div>`).join(""):'<div class="pmEmpty">No group chats yet.</div>'}catch(e){console.error(e);box.innerHTML='<div class="pmEmpty">Could not load group chats.</div>';}}
 function openChatHub(){hideAllPages();document.getElementById("chatPage")?.classList.add("active");loadChatFriends();pmRenderGroupChats();}
-async function openGroupChat(chatId){if(!pmAuthUser)return;pmActiveGroupId=chatId;pmActiveChatFriendId=null;hideAllPages();document.getElementById("chatPage")?.classList.add("active");if(pmChatUnsubscribe)pmChatUnsubscribe();const ref=firebase.firestore().collection("chats").doc(chatId),snap=await ref.get();if(!snap.exists||!(snap.data().participants||[]).includes(pmAuthUser.uid))return alert("You are not in that group.");const data=snap.data();document.getElementById("pmChatTitle").textContent=data.name||"GROUP CHAT";const input=document.getElementById("pmChatInput"),send=document.getElementById("pmChatSend"),emoji=document.getElementById("pmEmojiButton");input.disabled=false;send.disabled=false;if(emoji)emoji.disabled=false;const messages=document.getElementById("pmChatMessages");pmChatUnsubscribe=ref.collection("messages").orderBy("createdAt","asc").limitToLast(300).onSnapshot(async snapshot=>{messages.innerHTML="";const senderIds=[...new Set(snapshot.docs.map(d=>d.data().sender).filter(Boolean))];const userMap={};await Promise.all(senderIds.map(async id=>{const s=await firebase.firestore().collection("users").doc(id).get();userMap[id]=s.exists?s.data():{};}));snapshot.forEach(doc=>{const d=doc.data(),mine=d.sender===pmAuthUser.uid,wrap=document.createElement("div");wrap.className="pmChatBubbleWrap";const avatarStage=document.createElement("div");avatarStage.className="pmChatMessageAvatarStage";const av=document.createElement("img");av.className="pmChatMessageAvatar";av.src=pmAvatarFor(userMap[d.sender]||{});avatarStage.appendChild(av);if(pmHas67Equipped(userMap[d.sender]||{})){const fx=document.createElement("img");fx.className="pm67Overlay";fx.src=PM_COSMETICS.border67.asset;avatarStage.appendChild(fx);}const bubble=document.createElement("div");bubble.className="pmChatBubble";if(d.replyTo?.text){const q=document.createElement("div");q.className="pmReplyQuote";q.textContent="↪ "+d.replyTo.text;bubble.appendChild(q)}const text=document.createElement("div");text.textContent=d.text||"";const meta=document.createElement("div");meta.className="pmChatBubbleMeta";meta.textContent=userMap[d.sender]?.username||"MEMBER";bubble.append(text,meta);bubble.oncontextmenu=e=>pmShowChatContextMenu(e,doc.id,d);wrap.append(avatarStage,bubble);messages.appendChild(wrap)});messages.scrollTop=messages.scrollHeight},err=>{console.error(err);messages.innerHTML='<div class="pmChatEmpty">Could not load group chat.</div>'});}
+async 
+
+/* Group-chat notification sound. */
+function pmStartGroupMessageSoundListeners(){
+    if(!pmFirebaseReady||!pmAuthUser)return;
+    if(window.pmGroupSoundUnsubs)window.pmGroupSoundUnsubs.forEach(u=>{try{u();}catch(e){}});
+    window.pmGroupSoundUnsubs=[];
+    firebase.firestore().collection("chats").where("participants","array-contains",pmAuthUser.uid).limit(50).get().then(snap=>{
+        snap.docs.filter(d=>d.data()?.type==="group").forEach(chatDoc=>{
+            const chatId=chatDoc.id, key="promouserGroupSoundInit_"+chatId;
+            const unsub=chatDoc.ref.collection("messages").orderBy("createdAt","desc").limit(1).onSnapshot(ms=>{
+                if(ms.empty)return;
+                const doc=ms.docs[0],d=doc.data()||{};
+                if(d.sender===pmAuthUser.uid)return;
+                if(!sessionStorage.getItem(key)){sessionStorage.setItem(key,doc.id);return;}
+                if(sessionStorage.getItem(key)!==doc.id){sessionStorage.setItem(key,doc.id);pmPlayMessageSound();}
+            },err=>console.warn("Group sound listener:",err));
+            window.pmGroupSoundUnsubs.push(unsub);
+        });
+    }).catch(e=>console.warn("Could not start group sound listeners",e));
+}
+function openGroupChat(chatId){if(!pmAuthUser)return;pmActiveGroupId=chatId;pmActiveChatFriendId=null;hideAllPages();document.getElementById("chatPage")?.classList.add("active");if(pmChatUnsubscribe)pmChatUnsubscribe();const ref=firebase.firestore().collection("chats").doc(chatId),snap=await ref.get();if(!snap.exists||!(snap.data().participants||[]).includes(pmAuthUser.uid))return alert("You are not in that group.");const data=snap.data();document.getElementById("pmChatTitle").textContent=data.name||"GROUP CHAT";const input=document.getElementById("pmChatInput"),send=document.getElementById("pmChatSend"),emoji=document.getElementById("pmEmojiButton");input.disabled=false;send.disabled=false;if(emoji)emoji.disabled=false;const messages=document.getElementById("pmChatMessages");pmChatUnsubscribe=ref.collection("messages").orderBy("createdAt","asc").limitToLast(300).onSnapshot(async snapshot=>{messages.innerHTML="";const senderIds=[...new Set(snapshot.docs.map(d=>d.data().sender).filter(Boolean))];const userMap={};await Promise.all(senderIds.map(async id=>{const s=await firebase.firestore().collection("users").doc(id).get();userMap[id]=s.exists?s.data():{};}));snapshot.forEach(doc=>{const d=doc.data(),mine=d.sender===pmAuthUser.uid,wrap=document.createElement("div");wrap.className="pmChatBubbleWrap";const avatarStage=document.createElement("div");avatarStage.className="pmChatMessageAvatarStage";const av=document.createElement("img");av.className="pmChatMessageAvatar";av.src=pmAvatarFor(userMap[d.sender]||{});avatarStage.appendChild(av);if(pmHas67Equipped(userMap[d.sender]||{})){const fx=document.createElement("img");fx.className="pm67Overlay";fx.src=PM_COSMETICS.border67.asset;avatarStage.appendChild(fx);}const bubble=document.createElement("div");bubble.className="pmChatBubble";if(d.replyTo?.text){const q=document.createElement("div");q.className="pmReplyQuote";q.textContent="↪ "+d.replyTo.text;bubble.appendChild(q)}const text=document.createElement("div");text.textContent=d.text||"";const meta=document.createElement("div");meta.className="pmChatBubbleMeta";meta.textContent=userMap[d.sender]?.username||"MEMBER";bubble.append(text,meta);bubble.oncontextmenu=e=>pmShowChatContextMenu(e,doc.id,d);wrap.append(avatarStage,bubble);messages.appendChild(wrap)});messages.scrollTop=messages.scrollHeight},err=>{console.error(err);messages.innerHTML='<div class="pmChatEmpty">Could not load group chat.</div>'});}
 
 /* Branch the existing send function for group chats. */
 const pmV11OldSendChatMessage=sendChatMessage;
