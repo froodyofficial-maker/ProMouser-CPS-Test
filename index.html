@@ -3483,103 +3483,24 @@ body.voidMatrix .applyTimeButton{background:#c66cff!important;border-color:#c66c
 
     <!-- PROFANITY FILTER -->
     <div class="optionSection">
-        <div class="optionSectionTitle">
-            PROFANITY FILTER
-        </div>
-
+        <div class="optionSectionTitle">PROFANITY FILTER</div>
         <div class="toggleRow">
             <div class="toggleText">
                 <h3>Profanity Filter</h3>
                 <p>HIDE OFFENSIVE REACTIONS AND THE FLUFF YOU PROFILE EFFECT</p>
             </div>
-
             <label class="toggle">
-                <input
-                    type="checkbox"
-                    id="pmProfanityFilterToggle"
-                    onchange="pmSetProfanityFilter(this.checked)"
-                >
+                <input type="checkbox" id="pmProfanityFilterToggle" onchange="pmSetProfanityFilter(this.checked)">
                 <span class="toggleSlider"></span>
             </label>
         </div>
-
-        <div class="pmAuthHint">
-            When enabled, reactions containing profanity are hidden and the Fluff You effect is hidden from profiles, the leaderboard, and chat.
-        </div>
+        <div class="pmAuthHint">When enabled, offensive reactions are hidden and the Fluff You profile effect is not displayed.</div>
     </div>
 
 </div>
 
 </div>
 
-
-
-<script>
-/* =========================================================
-   V23 — PROFANITY FILTER
-   Hides offensive reactions and the Fluff You profile effect.
-========================================================= */
-const PM_PROFANITY_WORDS = [
-    "ass","asshole","bastard","bitch","bullshit","crap","damn",
-    "dick","fuck","fucking","fucked","hell","motherfucker","piss",
-    "shit","shitty","slut","whore"
-];
-
-function pmProfanityFilterOn(){
-    return localStorage.getItem("promouserProfanityFilter") === "1";
-}
-
-function pmSetProfanityFilter(enabled){
-    localStorage.setItem("promouserProfanityFilter", enabled ? "1" : "0");
-
-    const toggle = document.getElementById("pmProfanityFilterToggle");
-    if(toggle) toggle.checked = !!enabled;
-
-    // Immediately remove an offensive reaction that is already visible.
-    if(enabled){
-        const reaction = document.getElementById("reactionMessage");
-        if(reaction && pmReactionContainsProfanity(reaction.textContent || "")){
-            reaction.textContent = "";
-            reaction.classList.remove("show");
-        }
-    }
-
-    // Refresh visible cosmetic surfaces so Fluff You disappears immediately.
-    try{
-        if(typeof pmApplyGenericBorderToOwnProfile === "function"){
-            pmApplyGenericBorderToOwnProfile();
-        }
-        if(typeof pmRenderFluffYouShop === "function"){
-            pmRenderFluffYouShop();
-        }
-        if(typeof pmRenderShop === "function"){
-            pmRenderShop();
-        }
-    }catch(e){
-        console.warn("Profanity filter refresh:", e);
-    }
-}
-
-function pmReactionContainsProfanity(text){
-    const normalized = String(text || "")
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, " ")
-        .trim();
-
-    if(!normalized) return false;
-
-    const words = normalized.split(/\s+/);
-    return PM_PROFANITY_WORDS.some(word => words.includes(word));
-}
-
-function pmInitProfanityFilter(){
-    const toggle = document.getElementById("pmProfanityFilterToggle");
-    if(toggle) toggle.checked = pmProfanityFilterOn();
-}
-
-setTimeout(pmInitProfanityFilter, 0);
-setTimeout(pmInitProfanityFilter, 300);
-</script>
 
 <script>
 
@@ -4545,7 +4466,6 @@ function showReaction(cps) {
     }
 
 
-    // Profanity filter: do not display reactions containing blocked words.
     if(pmProfanityFilterOn() && pmReactionContainsProfanity(message)){
         reaction.textContent = "";
         reaction.classList.remove("show");
@@ -5917,11 +5837,7 @@ if (typeof PM_SHOP_ITEMS !== "undefined") {
 
 function pmGetEquippedBorder(data=pmUserData){
     const id=data?.equippedBorder;
-
-    // Profanity filter hides the Fluff You visual everywhere the equipped
-    // profile effect is rendered, while leaving ownership/purchases untouched.
     if(id==="border_fluff_you" && pmProfanityFilterOn()) return null;
-
     if(id==="border_67") return {id,asset:PM_67_BORDER_ASSET,name:"67 BORDER EFFECT"};
     if(id==="border_fluff_you") return {id,asset:PM_FLUFF_YOU_ASSET,name:"FLUFF YOU"};
     return null;
@@ -8385,19 +8301,48 @@ function pmApplyBorderVideo(container,data){
 }
 </script>
 
-
 <script>
-/* V23 — synchronize Profanity Filter when Options is opened */
-(function(){
-    const oldOpenOptions = window.openOptions;
-    if(typeof oldOpenOptions === "function"){
-        window.openOptions = function(){
-            const result = oldOpenOptions.apply(this, arguments);
-            setTimeout(pmInitProfanityFilter, 50);
-            return result;
-        };
+/* V24 — Profanity Filter. Built from known-good v22. */
+const PM_PROFANITY_WORDS=["ass","asshole","bastard","bitch","bullshit","crap","damn","dick","fuck","fucking","fucked","hell","motherfucker","piss","shit","shitty","slut","whore"];
+
+function pmProfanityFilterOn(){
+    return localStorage.getItem("promouserProfanityFilter")==="1";
+}
+
+function pmReactionContainsProfanity(text){
+    const normalized=String(text||"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();
+    if(!normalized) return false;
+    const words=normalized.split(/\s+/);
+    return PM_PROFANITY_WORDS.some(word=>words.includes(word));
+}
+
+function pmSetProfanityFilter(enabled){
+    localStorage.setItem("promouserProfanityFilter",enabled?"1":"0");
+    const toggle=document.getElementById("pmProfanityFilterToggle");
+    if(toggle) toggle.checked=!!enabled;
+
+    if(enabled){
+        const reaction=document.getElementById("reactionMessage");
+        if(reaction && pmReactionContainsProfanity(reaction.textContent||"")){
+            reaction.textContent="";
+            reaction.classList.remove("show");
+        }
     }
-})();
+
+    try{
+        if(typeof pmApplyGenericBorderToOwnProfile==="function") pmApplyGenericBorderToOwnProfile();
+        if(typeof pmRenderFluffYouShop==="function") pmRenderFluffYouShop();
+    }catch(e){
+        console.warn("Profanity filter refresh:",e);
+    }
+}
+
+function pmInitProfanityFilter(){
+    const toggle=document.getElementById("pmProfanityFilterToggle");
+    if(toggle) toggle.checked=pmProfanityFilterOn();
+}
+
+window.addEventListener("DOMContentLoaded",pmInitProfanityFilter);
 </script>
 
 </body>
