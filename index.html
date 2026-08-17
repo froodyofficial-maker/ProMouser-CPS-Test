@@ -7626,7 +7626,7 @@ setTimeout(()=>{pmEnsureGroupChatUI();pmEnsureDailyWheel();pmRefreshCoinWheel();
 (function(){
   const enforceVoidMatrix=()=>{
     try{
-      if(window.pmUserData && pmUserData.equippedUI === "ui_void_matrix"){
+      if(pmUserData && pmUserData.equippedUI === "ui_void_matrix"){
         document.body.classList.remove("neonPulse");
         document.body.classList.add("voidMatrix");
       }
@@ -7639,7 +7639,7 @@ setTimeout(()=>{pmEnsureGroupChatUI();pmEnsureDailyWheel();pmRefreshCoinWheel();
   });
   const obs=new MutationObserver(()=>{
     try{
-      if(window.pmUserData && pmUserData.equippedUI === "ui_void_matrix" && !document.body.classList.contains("voidMatrix")){
+      if(pmUserData && pmUserData.equippedUI === "ui_void_matrix" && !document.body.classList.contains("voidMatrix")){
         document.body.classList.add("voidMatrix");
         document.body.classList.remove("neonPulse");
       }
@@ -8204,7 +8204,7 @@ body.voidMatrix .pmAdditivePerformanceTitle{color:#9da9ff;}
     const pmOriginalRenderHistory=window.renderHistory;
 
     function pmIsRealAdmin(){
-        return !!(window.pmAuthUser && window.pmAuthUser.uid===PM_REAL_ADMIN_UID);
+        return !!(pmAuthUser && pmAuthUser.uid===PM_REAL_ADMIN_UID);
     }
 
     window.deleteCPSHistoryTest=function(testId){
@@ -8328,8 +8328,8 @@ body.voidMatrix .pmAdditivePerformanceTitle{color:#9da9ff;}
     }
     pmInstallRetroItem();
 
-    function pmRetroOwned(){return !!(window.pmUserData?.ownedCosmetics||[]).includes(RT_ID);}
-    function pmRetroEquipped(){return window.pmUserData?.equippedUI===RT_ID;}
+    function pmRetroOwned(){return !!(pmUserData?.ownedCosmetics||[]).includes(RT_ID);}
+    function pmRetroEquipped(){return pmUserData?.equippedUI===RT_ID;}
 
     function pmApplyRetroUI(){
         document.body.classList.remove("retroTerminal");
@@ -8352,11 +8352,11 @@ body.voidMatrix .pmAdditivePerformanceTitle{color:#9da9ff;}
     const oldEquipUI=window.pmEquipUI;
     window.pmEquipUI=async function(id){
         if(id!==RT_ID)return oldEquipUI.apply(this,arguments);
-        if(!window.pmFirebaseReady||!window.pmAuthUser||!window.pmUserData)return alert("Your online account is not connected yet.");
+        if(!pmFirebaseReady||!pmAuthUser||!pmUserData)return alert("Your online account is not connected yet.");
         if(!pmRetroOwned())return alert("Buy the Retro Terminal UI from the Shop first.");
         const next=pmRetroEquipped()?"default":RT_ID;
         try{
-            window.pmUserData.equippedUI=next;
+            pmUserData.equippedUI=next;
             pmApplyRetroUI();
             await firebase.firestore().collection("users").doc(pmAuthUser.uid).set({equippedUI:next,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
             await pmLoadOwnProfile();
@@ -8656,7 +8656,7 @@ body.retroTerminal .pmBannerProgress span{background:#62ff9a;}
             </div>
             <div class="pmProfilePanel" data-pm-panel="controls">
                 <div class="pmVisibilityGrid" id="pmVisibilityGrid"></div>
-                <div class="pmFilterNotice"><strong>PROFANITY FILTER:</strong> When enabled, the <em>Fluff You</em> profile effect is hidden from your Shop and its visual effect is hidden on profiles, chats and leaderboard views. It is ON by default.</div>
+                <div class="pmFilterNotice"><strong>PROFANITY FILTER:</strong> When enabled, the <em>Fluff You</em> profile effect is hidden from your Shop and its visual effect is hidden on profiles, chats and leaderboard views. It is OFF by default.</div>
                 <button class="pmActionButton" id="pmSaveVisibilityButton" style="margin-top:12px;">SAVE PROFILE CONTROLS</button>
             </div>
             <div class="pmProfilePanel" data-pm-panel="banner">
@@ -8903,5 +8903,746 @@ body.retroTerminal .pmBannerProgress span{background:#62ff9a;}
 
 })();
 </script>
+
+
+<!-- =========================================================
+     PROMOUSER ADDITIVE PATCH V2 — PROFANITY OPTIONS + BANNER FIX
+     Base/core HTML and previous feature patches remain untouched.
+========================================================= -->
+<style id="pmV2OptionsBannerFixStyles">
+.pmOptionsProfanityCard{position:relative;overflow:hidden;}
+.pmOptionsProfanityCard .pmAuthHint{margin-top:8px;}
+.pmOptionsProfanityCard.pmFilterOff{border-color:#351313;}
+.pmOptionsProfanityCard.pmFilterOn{border-color:#ff1717;box-shadow:0 0 14px rgba(255,23,23,.08);}
+.pmBannerUploadStatus{display:flex;align-items:center;gap:8px;margin-top:10px;min-height:18px;}
+.pmBannerUploadSpinner{width:12px;height:12px;border:2px solid rgba(255,255,255,.18);border-top-color:#ff1717;border-radius:50%;animation:pmBannerSpin .7s linear infinite;display:none;}
+.pmBannerUploadStatus.uploading .pmBannerUploadSpinner{display:inline-block;}
+@keyframes pmBannerSpin{to{transform:rotate(360deg)}}
+body.retroTerminal .pmOptionsProfanityCard{border-color:#28583a;background:#030704;box-shadow:none;}
+body.retroTerminal .pmOptionsProfanityCard.pmFilterOn{border-color:#62ff9a;box-shadow:0 0 14px rgba(98,255,154,.08);}
+body.retroTerminal .pmBannerUploadSpinner{border-top-color:#62ff9a;}
+</style>
+<script id="pmV2OptionsBannerFixScript">
+(function(){
+    "use strict";
+
+    /* ---------------------------------------------------------
+       1) PROFANITY FILTER — OPTIONS TAB, DEFAULT OFF
+       The old feature made this default ON. This migration turns
+       that old implicit default OFF once, then preserves whatever
+       the player explicitly chooses afterward.
+    --------------------------------------------------------- */
+    const PM_V2_FILTER_MIGRATION="pmProMouserFilterDefaultV2";
+
+    async function pmV2ApplyDefaultOff(){
+        if(!pmFirebaseReady || !pmAuthUser || !pmUserData)return;
+        try{
+            if(pmUserData.profanityFilterDefaultV2!==true){
+                /* The previous implementation had no usable Options toggle,
+                   so its TRUE value was an automatic default, not a user choice. */
+                pmUserData.profanityFilter=false;
+                await firebase.firestore().collection("users").doc(pmAuthUser.uid).set({
+                    profanityFilter:false,
+                    profanityFilterDefaultV2:true,
+                    updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+                },{merge:true});
+                /* Firestore marker records that the player has received the V2 default. */
+            }
+        }catch(err){
+            console.error("ProMouser profanity filter migration failed:",err);
+        }
+        pmV2SyncFilterUI();
+    }
+
+    function pmV2FilterEnabled(){
+        return pmUserData?.profanityFilter===true;
+    }
+
+    async function pmV2SetFilter(enabled){
+        if(!pmFirebaseReady || !pmAuthUser || !pmUserData){
+            const input=document.getElementById("pmOptionsProfanityToggle");
+            if(input)input.checked=false;
+            return alert("Connect your account first.");
+        }
+        const value=!!enabled;
+        try{
+            pmUserData.profanityFilter=value;
+            await firebase.firestore().collection("users").doc(pmAuthUser.uid).set({
+                profanityFilter:value,
+                profanityFilterDefaultV2:true,
+                updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+            },{merge:true});
+            /* Firestore marker records that the player has received the V2 default. */
+            pmV2SyncFilterUI();
+            /* Existing Fluff renderer lives in the earlier additive patch.
+               Reloading the own profile makes it re-run its normal rendering path. */
+            if(typeof pmLoadOwnProfile==="function")await pmLoadOwnProfile();
+        }catch(err){
+            console.error(err);
+            pmUserData.profanityFilter=!value;
+            pmV2SyncFilterUI();
+            alert("Could not save the profanity filter setting.");
+        }
+    }
+
+    function pmV2SyncFilterUI(){
+        const enabled=pmV2FilterEnabled();
+        const input=document.getElementById("pmOptionsProfanityToggle");
+        if(input)input.checked=enabled;
+        const card=document.getElementById("pmOptionsProfanityCard");
+        if(card){
+            card.classList.toggle("pmFilterOn",enabled);
+            card.classList.toggle("pmFilterOff",!enabled);
+        }
+        const state=document.getElementById("pmOptionsProfanityState");
+        if(state)state.textContent=enabled?"ON • FLUFF YOU IS HIDDEN":"OFF • FLUFF YOU IS VISIBLE";
+        /* Keep the existing body class in sync without needing access to the
+           earlier patch's private helper function. */
+        document.body.classList.toggle("pmProfanityFilterOn",enabled);
+        const fluffCard=document.querySelector("[data-fluff-you-shop]");
+        if(fluffCard)fluffCard.style.display=enabled?"none":"";
+    }
+
+    function pmV2EnsureOptionsCard(){
+        const options=document.getElementById("optionsPage");
+        const host=options?.querySelector(".secondaryPage");
+        if(!host)return;
+        if(document.getElementById("pmOptionsProfanityCard")){
+            pmV2SyncFilterUI();
+            return;
+        }
+        const card=document.createElement("div");
+        card.className="optionSection pmOptionsProfanityCard pmFilterOff";
+        card.id="pmOptionsProfanityCard";
+        card.innerHTML=`
+            <div class="optionSectionTitle">PROFANITY FILTER</div>
+            <div class="toggleRow">
+                <div class="toggleText">
+                    <h3>Profanity Filter</h3>
+                    <p>HIDE THE FLUFF YOU BORDER FROM THE SHOP AND PLAYER VIEWS</p>
+                    <div class="pmAuthHint" id="pmOptionsProfanityState">OFF • FLUFF YOU IS VISIBLE</div>
+                </div>
+                <label class="toggle">
+                    <input type="checkbox" id="pmOptionsProfanityToggle">
+                    <span class="toggleSlider"></span>
+                </label>
+            </div>
+            <div class="pmAuthHint">OFF by default. Turn it ON if you want the Fluff You profile effect hidden from your Shop, profiles, leaderboard and chats.</div>
+        `;
+        /* Put it near the other customization/settings controls. */
+        const customization=Array.from(host.querySelectorAll(".optionSection")).find(x=>/CUSTOMIZATION/i.test(x.textContent||""));
+        if(customization)customization.insertAdjacentElement("afterend",card);
+        else host.appendChild(card);
+        document.getElementById("pmOptionsProfanityToggle").addEventListener("change",e=>pmV2SetFilter(e.target.checked));
+        pmV2SyncFilterUI();
+    }
+
+    /* ---------------------------------------------------------
+       2) BANNER UPLOAD FIX
+       The previous upload could sit at 20% while Firebase Storage
+       waited indefinitely. This replacement stores a compressed
+       banner directly in the player's Firestore profile document.
+       It is kept under a safe size limit, so no Firebase Storage
+       upload/rules/CORS dependency is required for banners.
+    --------------------------------------------------------- */
+    function pmV2PrepareBanner(file){
+        return new Promise((resolve,reject)=>{
+            if(!file || !file.type || !file.type.startsWith("image/"))return reject(new Error("Choose an image file."));
+            if(file.size>20*1024*1024)return reject(new Error("Banner must be 20 MB or smaller before compression."));
+            const reader=new FileReader();
+            reader.onerror=()=>reject(new Error("Could not read that file."));
+            reader.onload=()=>{
+                const img=new Image();
+                img.onerror=()=>reject(new Error("Could not decode that image."));
+                img.onload=()=>{
+                    const maxW=1400,maxH=450;
+                    const scale=Math.min(1,maxW/img.width,maxH/img.height);
+                    const w=Math.max(1,Math.round(img.width*scale));
+                    const h=Math.max(1,Math.round(img.height*scale));
+                    const canvas=document.createElement("canvas");
+                    canvas.width=w;canvas.height=h;
+                    const ctx=canvas.getContext("2d",{alpha:false});
+                    if(!ctx)return reject(new Error("Your browser could not create the banner preview."));
+                    ctx.fillStyle="#050505";ctx.fillRect(0,0,w,h);
+                    ctx.drawImage(img,0,0,w,h);
+
+                    /* Keep retrying with smaller quality until the Firestore
+                       document has plenty of room left for the other profile data. */
+                    let quality=.82;
+                    let data=canvas.toDataURL("image/jpeg",quality);
+                    while(data.length>700000 && quality>.35){
+                        quality-=.07;
+                        data=canvas.toDataURL("image/jpeg",quality);
+                    }
+                    if(data.length>700000)return reject(new Error("That banner is unusually complex. Please use a smaller image."));
+                    resolve({data,w,h,bytes:data.length});
+                };
+                img.src=reader.result;
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function pmV2SetBannerProgress(percent,statusText){
+        const progress=document.getElementById("pmBannerProgress");
+        const bar=progress?.querySelector("span");
+        const status=document.getElementById("pmBannerStatus");
+        if(progress)progress.style.display="block";
+        if(bar)bar.style.width=Math.max(0,Math.min(100,percent))+"%";
+        if(status)status.textContent=statusText||"";
+    }
+
+    async function pmV2UploadProfileBanner(e){
+        /* Stop the old bubble-phase listener from running as well. */
+        e.stopImmediatePropagation();
+        const input=e.target;
+        const file=input?.files?.[0];
+        if(!file)return;
+        const status=document.getElementById("pmBannerStatus");
+        const progress=document.getElementById("pmBannerProgress");
+        const bar=progress?.querySelector("span");
+        const statusWrap=status?.parentElement;
+        try{
+            if(!pmFirebaseReady||!pmAuthUser||!pmUserData)throw new Error("Connect your account first.");
+            if(statusWrap)statusWrap.classList.add("uploading");
+            pmV2SetBannerProgress(5,"Preparing banner...");
+            const prepared=await pmV2PrepareBanner(file);
+            pmV2SetBannerProgress(55,"Saving banner to your profile...");
+
+            const ref=firebase.firestore().collection("users").doc(pmAuthUser.uid);
+            await ref.set({
+                profileBannerUrl:prepared.data,
+                profileBannerData:prepared.data,
+                profileBannerPath:"firestore",
+                profileBannerWidth:prepared.w,
+                profileBannerHeight:prepared.h,
+                updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+            },{merge:true});
+
+            pmV2SetBannerProgress(100,"Banner uploaded successfully.");
+            pmUserData.profileBannerUrl=prepared.data;
+            pmUserData.profileBannerData=prepared.data;
+            pmUserData.profileBannerPath="firestore";
+            pmUserData.profileBannerWidth=prepared.w;
+            pmUserData.profileBannerHeight=prepared.h;
+
+            const preview=document.getElementById("pmPersonalBannerPreview");
+            if(preview){preview.innerHTML="";const img=document.createElement("img");img.src=prepared.data;img.alt="Profile banner";preview.appendChild(img);}
+            setTimeout(()=>{if(progress)progress.style.display="none";},900);
+        }catch(err){
+            console.error("ProMouser banner upload failed:",err);
+            pmV2SetBannerProgress(0,"Upload failed.");
+            alert("Could not upload banner. "+(err?.message||"Please try another image."));
+            if(progress)setTimeout(()=>progress.style.display="none",900);
+        }finally{
+            if(statusWrap)statusWrap.classList.remove("uploading");
+            if(input)input.value="";
+        }
+    }
+
+    async function pmV2RemoveProfileBanner(){
+        if(!pmFirebaseReady||!pmAuthUser||!pmUserData)return alert("Connect your account first.");
+        if(!pmUserData.profileBannerUrl && !pmUserData.profileBannerData)return;
+        if(!confirm("Remove your profile banner?"))return;
+        try{
+            await firebase.firestore().collection("users").doc(pmAuthUser.uid).set({
+                profileBannerUrl:"",
+                profileBannerData:"",
+                profileBannerPath:"",
+                profileBannerWidth:0,
+                profileBannerHeight:0,
+                updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+            },{merge:true});
+            pmUserData.profileBannerUrl="";
+            pmUserData.profileBannerData="";
+            pmUserData.profileBannerPath="";
+            const preview=document.getElementById("pmPersonalBannerPreview");
+            if(preview)preview.innerHTML='<div class="pmPersonalBannerEmpty">NO CUSTOM BANNER</div>';
+        }catch(err){
+            console.error(err);
+            alert("Could not remove the banner.");
+        }
+    }
+
+    function pmV2BindBannerUpload(){
+        const input=document.getElementById("pmProfileBannerInput");
+        if(!input||input.dataset.pmV2Bound)return;
+        input.dataset.pmV2Bound="1";
+        /* Capture phase guarantees the old listener never reaches the upload. */
+        input.addEventListener("change",pmV2UploadProfileBanner,true);
+        const remove=document.getElementById("pmRemoveBannerButton");
+        if(remove){
+            remove.dataset.pmV2Bound="1";
+            remove.addEventListener("click",e=>{e.preventDefault();e.stopImmediatePropagation();pmV2RemoveProfileBanner();},true);
+        }
+    }
+
+    /* Keep the global name useful for any future code that calls it directly. */
+    pmUploadProfileBanner=pmV2UploadProfileBanner;
+    pmRemoveProfileBanner=pmV2RemoveProfileBanner;
+
+    function pmV2Init(){
+        pmV2EnsureOptionsCard();
+        pmV2BindBannerUpload();
+        if(pmFirebaseReady && pmAuthUser && pmUserData)pmV2ApplyDefaultOff();
+        else pmV2SyncFilterUI();
+    }
+
+    setTimeout(pmV2Init,500);
+    setTimeout(pmV2Init,1500);
+    setTimeout(pmV2Init,3000);
+    let pmV2Polls=0;
+    const pmV2Poll=setInterval(()=>{pmV2Init();if(++pmV2Polls>=24)clearInterval(pmV2Poll);},500);
+    window.addEventListener("focus",pmV2Init);
+})();
+</script>
+
+<!-- =========================================================
+     PROMOUSER ADDITIVE PATCH V3 — NET WORTH / OWNED ITEMS
+     Base/core HTML and previous feature patches remain untouched.
+========================================================= -->
+<style id="pmNetWorthPatchStyles">
+.pmNetWorthStat{cursor:pointer;position:relative;transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease;}
+.pmNetWorthStat:hover{transform:translateY(-2px);border-color:#ff1717;box-shadow:0 0 16px rgba(255,23,23,.12);}
+.pmNetWorthStat::after{content:"CLICK OWNED ITEMS TO VIEW";position:absolute;right:10px;bottom:7px;font-size:7px;letter-spacing:1.3px;color:#756767;font-weight:900;}
+.pmNetWorthLabel{display:block;margin-top:3px;font-size:8px;letter-spacing:1.2px;color:#756767;font-weight:800;}
+.pmOwnedItemsModal{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.82);display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(5px);}
+.pmOwnedItemsModal.show{display:flex;}
+.pmOwnedItemsPanel{width:min(720px,96vw);max-height:82vh;overflow:auto;background:#050505;border:1px solid #4a1717;border-radius:14px;box-shadow:0 0 35px rgba(255,23,23,.2);padding:20px;}
+.pmOwnedItemsHeader{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:15px;}
+.pmOwnedItemsTitle{font-size:20px;font-weight:1000;color:#fff;letter-spacing:2px;}
+.pmOwnedItemsSub{font-size:10px;color:#756767;margin-top:4px;}
+.pmOwnedItemsClose{border:1px solid #451313;background:#080505;color:#fff;border-radius:8px;padding:9px 12px;font-weight:900;cursor:pointer;}
+.pmOwnedItemsGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;}
+.pmOwnedItemCard{border:1px solid #351313;background:#030303;border-radius:10px;padding:14px;cursor:default;}
+.pmOwnedItemCard.equipped{border-color:#ff1717;box-shadow:0 0 12px rgba(255,23,23,.08);}
+.pmOwnedItemPreview{height:105px;border:1px solid #241111;background:#050505;border-radius:8px;overflow:hidden;display:grid;place-items:center;margin-bottom:10px;}
+.pmOwnedItemPreview img{width:100%;height:100%;object-fit:cover;}
+.pmOwnedItemName{font-weight:1000;color:#fff;font-size:13px;letter-spacing:1px;}
+.pmOwnedItemType{font-size:9px;color:#ff7373;font-weight:900;letter-spacing:1.5px;margin-top:4px;}
+.pmOwnedItemDesc{font-size:10px;color:#8a7a7a;line-height:1.45;margin-top:7px;}
+.pmOwnedItemStatus{font-size:9px;color:#756767;font-weight:900;margin-top:9px;}
+.pmOwnedItemStatus.equipped{color:#ff1717;}
+.pmOwnedEmpty{padding:30px 15px;text-align:center;border:1px dashed #351313;border-radius:10px;color:#756767;font-size:11px;letter-spacing:1px;}
+body.retroTerminal .pmNetWorthStat:hover{border-color:#62ff9a;box-shadow:0 0 16px rgba(98,255,154,.1);}
+body.retroTerminal .pmOwnedItemsPanel{border-radius:2px;border-color:#28583a;background:#020603;box-shadow:0 0 35px rgba(98,255,154,.12);}
+body.retroTerminal .pmOwnedItemCard{border-radius:2px;border-color:#28583a;background:#030704;}
+body.retroTerminal .pmOwnedItemCard.equipped{border-color:#62ff9a;}
+body.retroTerminal .pmOwnedItemStatus.equipped,body.retroTerminal .pmOwnedItemType{color:#62ff9a;}
+body.retroTerminal .pmOwnedItemPreview{border-radius:2px;border-color:#28583a;background:#020603;}
+@media(max-width:700px){.pmOwnedItemsModal{padding:10px}.pmOwnedItemsPanel{padding:14px}.pmNetWorthStat::after{font-size:6px;}}
+</style>
+<script id="pmNetWorthPatchScript">
+(function(){
+    "use strict";
+    const PM_NW_FIELD="totalNetWorth";
+    function pmNWNumber(v){return Math.max(0,Math.floor(Number(v)||0));}
+
+    async function pmNWEnsureField(){
+        if(!pmFirebaseReady||!pmAuthUser||!pmUserData)return;
+        const currentCoins=pmNWNumber(pmUserData.coins),existing=Number(pmUserData[PM_NW_FIELD]);
+        if(!Number.isFinite(existing)||existing<currentCoins){
+            const value=Math.max(currentCoins,Number.isFinite(existing)?pmNWNumber(existing):0);
+            try{
+                await firebase.firestore().collection("users").doc(pmAuthUser.uid).set({[PM_NW_FIELD]:value,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+                pmUserData[PM_NW_FIELD]=value;
+            }catch(e){console.error("Net worth migration failed:",e);}
+        }else pmUserData[PM_NW_FIELD]=pmNWNumber(existing);
+    }
+
+    async function pmNWAdd(uid,amount){
+        amount=pmNWNumber(amount);if(!uid||amount<=0||!pmFirebaseReady)return;
+        try{
+            const ref=firebase.firestore().collection("users").doc(uid);
+            await firebase.firestore().runTransaction(async tx=>{
+                const snap=await tx.get(ref);if(!snap.exists)return;
+                const d=snap.data()||{},current=pmNWNumber(d[PM_NW_FIELD]),balance=pmNWNumber(d.coins);
+                tx.update(ref,{[PM_NW_FIELD]:Math.max(current+amount,balance),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+            });
+            if(uid===pmAuthUser?.uid&&pmUserData)pmUserData[PM_NW_FIELD]=Math.max(pmNWNumber(pmUserData[PM_NW_FIELD])+amount,pmNWNumber(pmUserData.coins));
+        }catch(e){console.error("Net worth update failed:",e);}
+    }
+
+    async function pmNWTrackBalanceDelta(beforeCoins,uid=pmAuthUser?.uid){
+        if(!uid||!pmFirebaseReady)return;
+        try{
+            const snap=await firebase.firestore().collection("users").doc(uid).get();if(!snap.exists)return;
+            const after=pmNWNumber(snap.data()?.coins),before=pmNWNumber(beforeCoins);
+            if(after>before)await pmNWAdd(uid,after-before);
+        }catch(e){console.error("Net worth balance tracking failed:",e);}
+    }
+
+    const pmNWOldLoadOwnProfile=window.pmLoadOwnProfile;
+    if(typeof pmNWOldLoadOwnProfile==="function"){
+        window.pmLoadOwnProfile=async function(){const result=await pmNWOldLoadOwnProfile.apply(this,arguments);await pmNWEnsureField();pmNWRenderAll();return result;};
+    }
+
+    const pmNWOldSyncTest=window.promouserSyncTestResult;
+    if(typeof pmNWOldSyncTest==="function"){
+        window.promouserSyncTestResult=async function(){const before=pmNWNumber(pmUserData?.coins);const result=await pmNWOldSyncTest.apply(this,arguments);await pmNWTrackBalanceDelta(before);pmNWRenderAll();return result;};
+    }
+
+    const pmNWOldSecret=window.pmRedeemSecretCode;
+    if(typeof pmNWOldSecret==="function"){
+        window.pmRedeemSecretCode=async function(code){const before=pmNWNumber(pmUserData?.coins);const result=await pmNWOldSecret.apply(this,arguments);await pmNWTrackBalanceDelta(before);pmNWRenderAll();return result;};
+    }
+
+    const pmNWOldWheel=window.pmSpinCoinWheel;
+    if(typeof pmNWOldWheel==="function"){
+        window.pmSpinCoinWheel=async function(){const result=await pmNWOldWheel.apply(this,arguments);const reward=pmNWNumber(pmUserData?.coinWheel?.lastReward);if(reward)await pmNWAdd(pmAuthUser?.uid,reward);pmNWRenderAll();return result;};
+    }
+
+    const pmNWOldSendGift=window.pmSendCoinsFromGiftPage;
+    if(typeof pmNWOldSendGift==="function"){
+        window.pmSendCoinsFromGiftPage=async function(){
+            let targetId="";
+            try{
+                const username=String(document.getElementById("pmGiftUsernameInput")?.value||"").trim();
+                if(username&&pmFirebaseReady){const q=await firebase.firestore().collection("users").where("usernameLower","==",username.toLowerCase()).limit(2).get();const target=q.docs.find(doc=>doc.id!==pmAuthUser?.uid);targetId=target?.id||"";}
+            }catch(_){ }
+            const result=await pmNWOldSendGift.apply(this,arguments);
+            if(targetId){try{const senderSnap=await firebase.firestore().collection("users").doc(pmAuthUser.uid).get();const gift=senderSnap.data()?.lastCoinGift;if(gift?.to===targetId)await pmNWAdd(targetId,pmNWNumber(gift.amount));}catch(e){console.error(e);}}
+            pmNWRenderAll();return result;
+        };
+    }
+
+    const pmNWOldAdminGive=window.pmAdminGiveCoins;
+    if(typeof pmNWOldAdminGive==="function"){
+        window.pmAdminGiveCoins=async function(){
+            const target=pmAdminTargetId;const before=target&&pmFirebaseReady?pmNWNumber((await firebase.firestore().collection("users").doc(target).get()).data()?.coins):0;
+            const result=await pmNWOldAdminGive.apply(this,arguments);if(target)await pmNWTrackBalanceDelta(before,target);pmNWRenderAll();return result;
+        };
+    }
+
+    const pmNWOldAdminGift=window.pmAdminGiftCoins;
+    if(typeof pmNWOldAdminGift==="function"){
+        window.pmAdminGiftCoins=async function(){
+            const target=pmAdminTargetId;const before=target&&pmFirebaseReady?pmNWNumber((await firebase.firestore().collection("users").doc(target).get()).data()?.coins):0;
+            const result=await pmNWOldAdminGift.apply(this,arguments);if(target)await pmNWTrackBalanceDelta(before,target);pmNWRenderAll();return result;
+        };
+    }
+
+    function pmNWEnsureModal(){
+        let modal=document.getElementById("pmOwnedItemsModal");if(modal)return modal;
+        modal=document.createElement("div");modal.id="pmOwnedItemsModal";modal.className="pmOwnedItemsModal";
+        modal.innerHTML='<div class="pmOwnedItemsPanel" role="dialog" aria-modal="true" aria-label="Owned items"><div class="pmOwnedItemsHeader"><div><div class="pmOwnedItemsTitle">OWNED ITEMS</div><div class="pmOwnedItemsSub" id="pmOwnedItemsSub">Your cosmetic collection</div></div><button type="button" class="pmOwnedItemsClose" id="pmOwnedItemsClose">CLOSE</button></div><div class="pmOwnedItemsGrid" id="pmOwnedItemsGrid"></div></div>';
+        document.body.appendChild(modal);modal.addEventListener("click",e=>{if(e.target===modal)pmNWCloseOwnedItems();});modal.querySelector("#pmOwnedItemsClose").onclick=pmNWCloseOwnedItems;return modal;
+    }
+
+    function pmNWItemMeta(id){
+        const item=(typeof PM_SHOP_ITEMS!=="undefined"&&PM_SHOP_ITEMS[id])||(typeof PM_EXTRA_UI!=="undefined"&&Object.values(PM_EXTRA_UI).find(x=>x?.id===id));
+        if(item)return item;
+        const fallback={border_67:{id:"border_67",name:"67 BORDER EFFECT",type:"border",description:"Animated profile border effect."},border_fluff_you:{id:"border_fluff_you",name:"FLUFF YOU",type:"border",description:"Profile border effect."}}[id];
+        return fallback||{id,name:String(id).replaceAll("_"," ").toUpperCase(),type:"cosmetic",description:"Owned cosmetic item."};
+    }
+    function pmNWPreviewFor(item){
+        if(item.id==="border_67"&&typeof PM_67_BORDER_ASSET!=="undefined")return PM_67_BORDER_ASSET;
+        if(item.id==="border_fluff_you"&&typeof PM_FLUFF_ASSET!=="undefined")return PM_FLUFF_ASSET;
+        return "";
+    }
+
+    function pmNWRenderOwnedItems(data=pmUserData,publicView=false){
+        const modal=pmNWEnsureModal(),grid=modal.querySelector("#pmOwnedItemsGrid"),sub=modal.querySelector("#pmOwnedItemsSub"),owned=Array.isArray(data?.ownedCosmetics)?data.ownedCosmetics:[];
+        if(sub)sub.textContent=publicView?((data?.username||"Player")+" • OWNED COSMETICS"):(owned.length+" owned cosmetic item"+(owned.length===1?"":"s"));
+        grid.innerHTML="";
+        if(!owned.length){grid.innerHTML='<div class="pmOwnedEmpty">NO OWNED COSMETICS YET.</div>';return;}
+        owned.forEach(id=>{
+            const item=pmNWItemMeta(id),equipped=data?.equippedUI===id||data?.equippedBorder===id,card=document.createElement("div");card.className="pmOwnedItemCard"+(equipped?" equipped":"");
+            const preview=pmNWPreviewFor(item);
+            card.innerHTML='<div class="pmOwnedItemPreview">'+(preview?'<img src="'+preview+'" alt="">':'<div style="font:900 16px Courier New,monospace;color:var(--accent,#ff1717);letter-spacing:2px;text-align:center;padding:10px;">'+String(item.name||id).toUpperCase()+'</div>')+'</div><div class="pmOwnedItemName"></div><div class="pmOwnedItemType"></div><div class="pmOwnedItemDesc"></div><div class="pmOwnedItemStatus"></div>';
+            card.querySelector(".pmOwnedItemName").textContent=item.name||id;card.querySelector(".pmOwnedItemType").textContent=String(item.type||"COSMETIC").toUpperCase();card.querySelector(".pmOwnedItemDesc").textContent=item.description||"Owned cosmetic item.";
+            const status=card.querySelector(".pmOwnedItemStatus");status.textContent=equipped?"EQUIPPED":"OWNED";status.classList.toggle("equipped",equipped);grid.appendChild(card);
+        });
+    }
+    function pmNWOpenOwnedItems(data=pmUserData,publicView=false){if(!data)return;pmNWRenderOwnedItems(data,publicView);pmNWEnsureModal().classList.add("show");}
+    function pmNWCloseOwnedItems(){document.getElementById("pmOwnedItemsModal")?.classList.remove("show");}
+    window.pmNWOpenOwnedItems=pmNWOpenOwnedItems;window.pmNWCloseOwnedItems=pmNWCloseOwnedItems;
+
+    function pmNWBindOwnedCard(){
+        const stats=document.getElementById("pmPersonalOverviewStats");if(!stats)return;
+        [...stats.children].forEach(card=>{const title=card.querySelector(".historyStatTitle")?.textContent?.trim();if(title==="OWNED ITEMS"&&!card.dataset.pmNwBound){card.dataset.pmNwBound="1";card.classList.add("pmNetWorthStat");card.title="Click to view your owned items";card.onclick=()=>pmNWOpenOwnedItems(pmUserData,false);}});
+    }
+    function pmNWRenderPersonal(){
+        const stats=document.getElementById("pmPersonalOverviewStats");if(!stats||!pmUserData)return;
+        if(!stats.querySelector("[data-pm-net-worth]")){const card=document.createElement("div");card.className="historyStat pmNetWorthStat";card.dataset.pmNetWorth="1";card.innerHTML='<div class="historyStatTitle">TOTAL NET WORTH</div><div class="historyStatValue">'+pmNWNumber(pmUserData[PM_NW_FIELD]).toLocaleString()+' 🪙</div><span class="pmNetWorthLabel">LIFETIME COINS ACQUIRED</span>';stats.appendChild(card);}else{const value=stats.querySelector("[data-pm-net-worth] .historyStatValue");if(value)value.textContent=pmNWNumber(pmUserData[PM_NW_FIELD]).toLocaleString()+" 🪙";}
+        pmNWBindOwnedCard();
+    }
+
+    const profilePage=document.getElementById("profilePage");if(profilePage){const obs=new MutationObserver(pmNWRenderPersonal);obs.observe(profilePage,{subtree:true,childList:true});}
+
+    const pmNWOldOpenPublic=window.openPublicProfile;
+    if(typeof pmNWOldOpenPublic==="function")window.openPublicProfile=async function(uid){const result=await pmNWOldOpenPublic.apply(this,arguments);setTimeout(pmNWRenderPublic,40);return result;};
+    function pmNWRenderPublic(){
+        const page=document.getElementById("publicProfilePage"),data=window.pmPublicUserData||pmPublicUserData;if(!page||!data)return;const card=page.querySelector(".pmPublicProfileCard");if(!card)return;
+        let box=card.querySelector(".pmPublicNetWorthBox"),show=data.profileVisibility?.netWorth!==false;
+        if(show){if(!box){box=document.createElement("div");box.className="pmPublicExtraCard pmPublicNetWorthBox";const extras=card.querySelector(".pmPublicExtraStats");if(extras)extras.insertBefore(box,extras.firstChild);else card.appendChild(box);}box.innerHTML='<div class="pmPublicExtraLabel">TOTAL NET WORTH</div><div class="pmPublicExtraValue">'+pmNWNumber(data[PM_NW_FIELD]).toLocaleString()+' 🪙</div><div class="pmNetWorthLabel">LIFETIME COINS ACQUIRED</div>';box.style.display="";}else if(box)box.style.display="none";
+        const ownedText=[...card.querySelectorAll(".pmPublicExtraCard")].find(x=>x.querySelector(".pmPublicExtraLabel")?.textContent?.trim()==="OWNED ITEMS");
+        if(ownedText&&!ownedText.dataset.pmNwOwnedBound){ownedText.dataset.pmNwOwnedBound="1";ownedText.style.cursor="pointer";ownedText.title="Click to view owned items";ownedText.addEventListener("click",()=>pmNWOpenOwnedItems(data,true));}
+    }
+
+    function pmNWEnsureVisibilityRow(){
+        const grid=document.getElementById("pmVisibilityGrid");if(!grid||grid.querySelector("[data-pm-networth-visibility]"))return;const row=document.createElement("div");row.className="pmVisibilityRow";const enabled=pmUserData?.profileVisibility?.netWorth!==false;
+        row.innerHTML='<div><strong>TOTAL NET WORTH</strong><small>Show your lifetime coin total on your public profile.</small></div><label class="toggle"><input type="checkbox" data-pm-networth-visibility '+(enabled?'checked':'')+'><span class="toggleSlider"></span></label>';grid.appendChild(row);
+        const save=document.getElementById("pmSaveVisibilityButton");if(save&&!save.dataset.pmNwBound){save.dataset.pmNwBound="1";save.addEventListener("click",async()=>{if(!pmFirebaseReady||!pmAuthUser)return;const visible=document.querySelector("[data-pm-networth-visibility]")?.checked!==false;try{await firebase.firestore().collection("users").doc(pmAuthUser.uid).set({profileVisibility:{netWorth:visible},updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});if(pmUserData)pmUserData.profileVisibility=Object.assign({},pmUserData.profileVisibility||{},{netWorth:visible});}catch(e){console.error(e);}});}
+    }
+    const profileObs=new MutationObserver(()=>{pmNWEnsureVisibilityRow();pmNWRenderPersonal();});if(document.body)profileObs.observe(document.body,{subtree:true,childList:true});
+    function pmNWRenderAll(){pmNWEnsureVisibilityRow();pmNWRenderPersonal();pmNWRenderPublic();}
+    setTimeout(async()=>{try{await pmNWEnsureField();}catch(_){}pmNWRenderAll();},700);setTimeout(pmNWRenderAll,1800);
+})();
+</script>
+
+
+
+<!-- =========================================================
+     PROMOUSER ADDITIVE PATCH V4 — NET WORTH PROFILE DESCRIPTION
+     Removes the V3 dashboard net-worth display and moves the
+     value into the profile-description area. Core code untouched.
+========================================================= -->
+<style id="pmNetWorthProfileDescPatchStyles">
+.pmProfileNetWorthLine{
+    margin-top:9px;
+    padding:8px 10px;
+    border:1px solid #351313;
+    border-radius:8px;
+    background:#030303;
+    color:#ff7373;
+    font-size:10px;
+    font-weight:900;
+    letter-spacing:1.2px;
+    text-transform:uppercase;
+}
+.pmProfileNetWorthLine span{color:#fff;}
+.pmPublicNetWorthLine{
+    margin-top:9px;
+    color:#ff7373;
+    font-size:10px;
+    font-weight:900;
+    letter-spacing:1px;
+    text-transform:uppercase;
+}
+body.retroTerminal .pmProfileNetWorthLine{border-radius:2px;border-color:#28583a;background:#020603;color:#62ff9a;}
+body.retroTerminal .pmProfileNetWorthLine span{color:#62ff9a;}
+body.retroTerminal .pmPublicNetWorthLine{color:#62ff9a;}
+</style>
+<script id="pmNetWorthProfileDescPatchScript">
+(function(){
+    "use strict";
+    const nw=()=>Math.max(0,Math.floor(Number(window.pmUserData?.totalNetWorth)||0));
+
+    /* Remove V3's personal-dashboard net-worth card only. */
+    function removePersonalNetWorth(){
+        const stats=document.getElementById("pmPersonalOverviewStats");
+        if(!stats)return;
+        stats.querySelectorAll('[data-pm-net-worth]').forEach(el=>el.remove());
+        stats.querySelectorAll('.pmNetWorthStat').forEach(el=>{
+            const title=el.querySelector('.historyStatTitle')?.textContent?.trim();
+            if(title==='TOTAL NET WORTH')el.remove();
+        });
+    }
+
+    /* Remove V3's separate public net-worth card and its visibility control. */
+    function removePublicNetWorthCard(){
+        document.querySelectorAll('.pmPublicNetWorthBox').forEach(el=>el.remove());
+        document.querySelectorAll('[data-pm-networth-visibility]').forEach(input=>input.closest('.pmVisibilityRow')?.remove());
+    }
+
+    /* Put lifetime net worth directly underneath the profile description. */
+    function renderOwnDescriptionNetWorth(){
+        const desc=document.getElementById('pmDescriptionInput');
+        if(!desc)return;
+        let line=document.getElementById('pmProfileNetWorthLine');
+        if(!line){
+            line=document.createElement('div');
+            line.id='pmProfileNetWorthLine';
+            line.className='pmProfileNetWorthLine';
+            desc.insertAdjacentElement('afterend',line);
+        }
+        line.innerHTML='TOTAL NET WORTH: <span>'+nw().toLocaleString()+' 🪙</span>';
+    }
+
+    /* Public profile: show the same information immediately below the public description. */
+    function renderPublicDescriptionNetWorth(){
+        const desc=document.getElementById('pmPublicDescription');
+        const data=window.pmPublicUserData||window.pmPublicUserData;
+        if(!desc||!data)return;
+        let line=document.getElementById('pmPublicNetWorthLine');
+        if(!line){
+            line=document.createElement('div');
+            line.id='pmPublicNetWorthLine';
+            line.className='pmPublicNetWorthLine';
+            desc.insertAdjacentElement('afterend',line);
+        }
+        line.textContent='TOTAL NET WORTH: '+Math.max(0,Math.floor(Number(data.totalNetWorth)||0)).toLocaleString()+' 🪙';
+    }
+
+    let refreshing=false;
+    function refresh(){
+        if(refreshing)return;
+        refreshing=true;
+        try{
+            removePersonalNetWorth();
+            removePublicNetWorthCard();
+            renderOwnDescriptionNetWorth();
+            renderPublicDescriptionNetWorth();
+        }finally{
+            refreshing=false;
+        }
+    }
+
+    /* Re-render after the existing profile functions update the DOM. */
+    const oldRenderOwn=window.renderOwnProfile;
+    if(typeof oldRenderOwn==='function'){
+        window.renderOwnProfile=async function(){
+            const r=await oldRenderOwn.apply(this,arguments);
+            setTimeout(refresh,0);
+            return r;
+        };
+    }
+
+    const oldOpenPublic=window.openPublicProfile;
+    if(typeof oldOpenPublic==='function'){
+        window.openPublicProfile=async function(){
+            const r=await oldOpenPublic.apply(this,arguments);
+            setTimeout(refresh,40);
+            return r;
+        };
+    }
+
+    const obs=new MutationObserver(()=>refresh());
+    if(document.body)obs.observe(document.body,{subtree:true,childList:true});
+    setTimeout(refresh,300);
+    setTimeout(refresh,1000);
+    setTimeout(refresh,2000);
+})();
+</script>
+
+
+
+<!-- =========================================================
+     PROMOUSER ADDITIVE PATCH V5 — PUBLIC NET WORTH CARD
+     Re-adds the separate public-profile net-worth card only.
+     It is scoped exclusively to #publicProfilePage, so it never
+     appears in the Global Leaderboard or other leaderboard rows.
+     Core code remains untouched.
+========================================================= -->
+<style id="pmPublicNetWorthCardV5Styles">
+.pmPublicNetWorthCardV5{
+    margin-top:12px;
+    background:#050505;
+    border:1px solid #351313;
+    border-radius:10px;
+    padding:16px 18px;
+    position:relative;
+    overflow:hidden;
+}
+.pmPublicNetWorthCardV5::before{
+    content:"";
+    position:absolute;
+    top:0;
+    left:12%;
+    right:12%;
+    height:1px;
+    background:#ff1717;
+    box-shadow:0 0 10px #ff1717;
+}
+.pmPublicNetWorthCardV5 .pmPublicNetWorthLabel{
+    color:#756767;
+    font-size:9px;
+    font-weight:900;
+    letter-spacing:2px;
+}
+.pmPublicNetWorthCardV5 .pmPublicNetWorthValue{
+    margin-top:6px;
+    color:#fff;
+    font-size:26px;
+    font-weight:1000;
+    text-shadow:0 0 10px rgba(255,23,23,.35);
+}
+.pmPublicNetWorthCardV5 .pmPublicNetWorthSub{
+    margin-top:4px;
+    color:#ff7373;
+    font-size:9px;
+    font-weight:900;
+    letter-spacing:1px;
+}
+body.retroTerminal .pmPublicNetWorthCardV5{
+    border-radius:2px;
+    border-color:#28583a;
+    background:#020603;
+}
+body.retroTerminal .pmPublicNetWorthCardV5::before{
+    background:#62ff9a;
+    box-shadow:0 0 10px #62ff9a;
+}
+body.retroTerminal .pmPublicNetWorthCardV5 .pmPublicNetWorthSub{color:#62ff9a;}
+body.retroTerminal .pmPublicNetWorthCardV5 .pmPublicNetWorthValue{text-shadow:0 0 10px rgba(98,255,154,.25);}
+</style>
+<script id="pmPublicNetWorthCardV5Script">
+(function(){
+    "use strict";
+
+    function pmPublicNWValue(data){
+        return Math.max(0,Math.floor(Number(data?.totalNetWorth)||0));
+    }
+
+    function pmRenderPublicNetWorthCard(){
+        const page=document.getElementById("publicProfilePage");
+        if(!page)return;
+        const card=page.querySelector(".pmPublicProfileCard");
+        if(!card)return;
+        const data=window.pmPublicUserData||window.pmPublicUserData||null;
+        if(!data)return;
+
+        /* Strictly scoped to the public profile page. Nothing here
+           touches leaderboard rows or the global leaderboard UI. */
+        let box=card.querySelector(".pmPublicNetWorthCardV5");
+        if(!box){
+            box=document.createElement("div");
+            box.className="pmPublicNetWorthCardV5";
+            const extras=card.querySelector(".pmPublicExtraStats");
+            if(extras)extras.insertBefore(box,extras.firstChild);
+            else{
+                const stats=card.querySelector(".pmProfileStats");
+                if(stats)stats.insertAdjacentElement("afterend",box);
+                else card.appendChild(box);
+            }
+        }
+        const value=pmPublicNWValue(data);
+        box.innerHTML=
+            '<div class="pmPublicNetWorthLabel">TOTAL NET WORTH</div>'+
+            '<div class="pmPublicNetWorthValue">'+value.toLocaleString()+" 🪙"+'</div>'+
+            '<div class="pmPublicNetWorthSub">LIFETIME COINS ACQUIRED</div>';
+    }
+
+    /* Re-render after the existing public-profile loader finishes. */
+    const oldOpenPublic=window.openPublicProfile;
+    if(typeof oldOpenPublic==="function"){
+        window.openPublicProfile=async function(){
+            const result=await oldOpenPublic.apply(this,arguments);
+            setTimeout(pmRenderPublicNetWorthCard,50);
+            setTimeout(pmRenderPublicNetWorthCard,250);
+            return result;
+        };
+    }
+
+    /* The V4 patch and other profile patches may update the card later,
+       so watch only the public-profile subtree and keep the operation
+       idempotent. */
+    const publicPage=document.getElementById("publicProfilePage");
+    if(publicPage){
+        let queued=false;
+        const observer=new MutationObserver(()=>{
+            if(queued)return;
+            queued=true;
+            requestAnimationFrame(()=>{queued=false;pmRenderPublicNetWorthCard();});
+        });
+        observer.observe(publicPage,{subtree:true,childList:true});
+    }
+
+    setTimeout(pmRenderPublicNetWorthCard,500);
+    setTimeout(pmRenderPublicNetWorthCard,1500);
+})();
+</script>
+
 </body>
 </html>
