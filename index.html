@@ -8073,5 +8073,387 @@ setInterval(()=>{if(pmAuthUser&&pmFirebaseReady)pmStartPresence();},30000);
 })();
 </script>
 
+<!-- =========================================================
+     PROMOUSER ADDITIVE PATCH — ADMIN HISTORY / PERFORMANCE / UI
+     Base code above is intentionally left untouched.
+========================================================= -->
+<style id="pmAdditiveFeaturePatchStyles">
+/* ---------- RETRO TERMINAL UI ---------- */
+body.retroTerminal{
+    --rt-bg:#07100b;
+    --rt-panel:#0a1710;
+    --rt-panel2:#0d1e15;
+    --rt-border:#28583a;
+    --rt-text:#d9ffe7;
+    --rt-muted:#76a989;
+    --rt-accent:#62ff9a;
+    --rt-accent2:#d7ff61;
+    --rt-shadow:0 0 22px rgba(98,255,154,.12);
+    background:
+        radial-gradient(circle at 20% 10%,rgba(98,255,154,.07),transparent 30%),
+        radial-gradient(circle at 85% 80%,rgba(215,255,97,.05),transparent 35%),
+        repeating-linear-gradient(0deg,rgba(255,255,255,.018) 0,rgba(255,255,255,.018) 1px,transparent 1px,transparent 4px),
+        var(--rt-bg)!important;
+    color:var(--rt-text)!important;
+    font-family:"Courier New",Courier,monospace!important;
+}
+body.retroTerminal *{font-family:"Courier New",Courier,monospace!important;}
+body.retroTerminal .pageHeader{
+    border-bottom:1px dashed var(--rt-border)!important;
+    padding-bottom:18px!important;
+    margin-bottom:22px!important;
+}
+body.retroTerminal .pageHeader h1{
+    font-family:"Courier New",monospace!important;
+    letter-spacing:5px!important;
+    text-shadow:0 0 12px rgba(98,255,154,.35)!important;
+}
+body.retroTerminal .pageHeader h1 span{color:var(--rt-accent)!important;}
+body.retroTerminal .secondaryPage{
+    background:linear-gradient(135deg,rgba(10,23,16,.96),rgba(4,11,7,.96))!important;
+    border:1px solid var(--rt-border)!important;
+    box-shadow:var(--rt-shadow)!important;
+    border-radius:4px!important;
+}
+body.retroTerminal .historyStat,
+body.retroTerminal .chartBox,
+body.retroTerminal .optionSection,
+body.retroTerminal .pmProfileCard,
+body.retroTerminal .pmAdminCard,
+body.retroTerminal .pmShopCard,
+body.retroTerminal .pmDailyWheelCard,
+body.retroTerminal .pmGroupCard{
+    background:var(--rt-panel)!important;
+    border:1px solid var(--rt-border)!important;
+    border-radius:3px!important;
+    box-shadow:inset 0 0 25px rgba(98,255,154,.025)!important;
+}
+body.retroTerminal .historyStats{grid-template-columns:repeat(4,1fr)!important;}
+body.retroTerminal .historyStatTitle,
+body.retroTerminal .optionSectionTitle,
+body.retroTerminal .chartTitle,
+body.retroTerminal .pmSmallLabel{color:var(--rt-muted)!important;letter-spacing:2px!important;}
+body.retroTerminal .historyStatValue{color:var(--rt-accent)!important;text-shadow:0 0 9px rgba(98,255,154,.28);}
+body.retroTerminal button,
+body.retroTerminal .pmActionButton,
+body.retroTerminal .backButton,
+body.retroTerminal input,
+body.retroTerminal textarea,
+body.retroTerminal select{
+    border-radius:2px!important;
+    border:1px solid var(--rt-border)!important;
+}
+body.retroTerminal .pmActionButton,
+body.retroTerminal .backButton{
+    background:#0b2015!important;
+    color:var(--rt-accent)!important;
+    box-shadow:0 0 0 rgba(98,255,154,0)!important;
+    text-transform:uppercase!important;
+}
+body.retroTerminal .pmActionButton:hover,
+body.retroTerminal .backButton:hover{background:#143b24!important;border-color:var(--rt-accent)!important;box-shadow:0 0 14px rgba(98,255,154,.16)!important;}
+body.retroTerminal input,
+body.retroTerminal textarea,
+body.retroTerminal select{background:#040a06!important;color:var(--rt-text)!important;}
+body.retroTerminal .pmShopGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:22px!important;}
+body.retroTerminal .pmShopPreview{background:#020603!important;border-color:var(--rt-border)!important;border-radius:2px!important;}
+body.retroTerminal .pmShopCard:hover{border-color:var(--rt-accent)!important;box-shadow:0 0 22px rgba(98,255,154,.13)!important;transform:translateY(-2px);}
+body.retroTerminal .pmShopName{font-size:19px!important;letter-spacing:2px!important;color:var(--rt-text)!important;}
+body.retroTerminal .pmShopPrice{color:var(--rt-accent2)!important;}
+body.retroTerminal .pmShopDescription,.retroTerminal .pmAuthHint{color:var(--rt-muted)!important;}
+body.retroTerminal .pmLeaderboardHeader,
+body.retroTerminal .pmLeaderboard,
+body.retroTerminal .pmChatWindow,
+body.retroTerminal .pmChatSidebar{border-color:var(--rt-border)!important;}
+body.retroTerminal .historyRow{border-color:#173a26!important;background:#07140c!important;}
+body.retroTerminal .historyScore{color:var(--rt-accent)!important;}
+body.retroTerminal .pmDeleteTestButton{display:none!important;}
+body.retroTerminal .chartTitle{color:var(--rt-accent)!important;}
+body.retroTerminal canvas{filter:drop-shadow(0 0 7px rgba(98,255,154,.14));}
+body.retroTerminal .uiOption{border-radius:3px!important;border-color:var(--rt-border)!important;background:var(--rt-panel)!important;}
+body.retroTerminal .uiOption.selected{border-color:var(--rt-accent)!important;box-shadow:0 0 18px rgba(98,255,154,.12)!important;}
+body.retroTerminal .pmCollectionItem{border-radius:3px!important;border-color:var(--rt-border)!important;background:var(--rt-panel)!important;}
+body.retroTerminal .pmCollectionItem.equipped{border-color:var(--rt-accent)!important;}
+body.retroTerminal .pmCollectionStatus.equippedText{color:var(--rt-accent)!important;}
+body.retroTerminal .pmShopPreview::after{content:"SYSTEM//SHOP";position:absolute;top:9px;left:10px;color:var(--rt-muted);font-size:9px;letter-spacing:2px;}
+@media(max-width:700px){body.retroTerminal .historyStats{grid-template-columns:repeat(2,1fr)!important;}body.retroTerminal .pmShopGrid{grid-template-columns:1fr!important;}}
+
+/* ---------- ADDITIVE PERFORMANCE GRAPH CARD ---------- */
+.pmAdditivePerformanceCard{margin-top:18px;background:#030303;border:1px solid #451313;border-radius:14px;padding:20px;}
+.pmAdditivePerformanceHead{display:flex;justify-content:space-between;align-items:end;gap:15px;margin-bottom:12px;}
+.pmAdditivePerformanceTitle{font-size:13px;letter-spacing:3px;font-weight:900;color:#ff2020;}
+.pmAdditivePerformanceSub{font-size:10px;color:#756767;letter-spacing:1px;text-align:right;}
+.pmAdditivePerformanceCanvas{width:100%;height:260px;display:block;}
+body.neonPulse .pmAdditivePerformanceCard{border-color:#07515e;background:#050d11;}
+body.neonPulse .pmAdditivePerformanceTitle{color:#00e5ff;}
+body.voidMatrix .pmAdditivePerformanceCard{border-color:#2b3141;background:#0a0c11;}
+body.voidMatrix .pmAdditivePerformanceTitle{color:#9da9ff;}
+</style>
+
+<script id="pmAdditiveFeaturePatch">
+(function(){
+    "use strict";
+
+    /* =========================================================
+       1) ONLY THE ADMIN MAY DELETE LOCAL CPS HISTORY
+       Existing delete function remains intact; this is a gate in
+       front of it and the renderer hides delete controls for others.
+    ========================================================= */
+    const PM_REAL_ADMIN_UID="WtQ6Vaz7a1Ogt3A0KTYYmFkCU132";
+    const pmOriginalDeleteCPSHistoryTest=window.deleteCPSHistoryTest;
+    const pmOriginalRenderHistory=window.renderHistory;
+
+    function pmIsRealAdmin(){
+        return !!(window.pmAuthUser && window.pmAuthUser.uid===PM_REAL_ADMIN_UID);
+    }
+
+    window.deleteCPSHistoryTest=function(testId){
+        if(!pmIsRealAdmin()){
+            alert("Only the ProMouser admin can delete CPS test history.");
+            return;
+        }
+        return pmOriginalDeleteCPSHistoryTest.apply(this,arguments);
+    };
+
+    window.renderHistory=function(){
+        const result=pmOriginalRenderHistory.apply(this,arguments);
+        if(!pmIsRealAdmin()){
+            document.querySelectorAll(".pmDeleteTestButton").forEach(btn=>btn.remove());
+        }
+        return result;
+    };
+
+    /* =========================================================
+       2) PERFORMANCE TAB — ADDITIVE GRAPH
+       The original CPS graph is already present in the base file.
+       This adds a separate detailed performance graph without
+       replacing or modifying the original canvas/chart code.
+    ========================================================= */
+    function pmEnsurePerformanceGraph(){
+        const page=document.getElementById("historyPage");
+        if(!page || document.getElementById("pmAdditivePerformanceCard"))return;
+        const host=page.querySelector(".secondaryPage");
+        if(!host)return;
+
+        const card=document.createElement("div");
+        card.id="pmAdditivePerformanceCard";
+        card.className="pmAdditivePerformanceCard";
+        card.innerHTML=`
+            <div class="pmAdditivePerformanceHead">
+                <div>
+                    <div class="pmAdditivePerformanceTitle">PERFORMANCE GRAPH</div>
+                    <div style="font-size:11px;color:#777;margin-top:5px;">CPS progression across your completed tests.</div>
+                </div>
+                <div class="pmAdditivePerformanceSub">LATEST → RIGHT</div>
+            </div>
+            <canvas id="pmAdditivePerformanceCanvas" class="pmAdditivePerformanceCanvas"></canvas>
+        `;
+        host.appendChild(card);
+        pmDrawPerformanceGraph();
+    }
+
+    function pmDrawPerformanceGraph(){
+        const canvas=document.getElementById("pmAdditivePerformanceCanvas");
+        if(!canvas)return;
+        const rect=canvas.getBoundingClientRect();
+        const dpr=window.devicePixelRatio||1;
+        const width=Math.max(300,rect.width||600),height=260;
+        canvas.width=width*dpr;canvas.height=height*dpr;
+        const ctx=canvas.getContext("2d");
+        ctx.setTransform(dpr,0,0,dpr,0,0);
+        ctx.clearRect(0,0,width,height);
+
+        const data=Array.isArray(window.history)?window.history.map(x=>Number(x?.score)).filter(Number.isFinite):[];
+        const pad={left:42,right:18,top:18,bottom:34};
+        const gw=width-pad.left-pad.right,gh=height-pad.top-pad.bottom;
+        const max=Math.max(1,...data);
+
+        ctx.strokeStyle=getComputedStyle(document.body).getPropertyValue("--rt-border")?.trim()||"rgba(255,40,40,.14)";
+        ctx.lineWidth=1;
+        for(let i=0;i<=4;i++){
+            const y=pad.top+gh-(gh/4)*i;
+            ctx.beginPath();ctx.moveTo(pad.left,y);ctx.lineTo(width-pad.right,y);ctx.stroke();
+            ctx.fillStyle=document.body.classList.contains("retroTerminal")?"#76a989":"#716565";
+            ctx.font="10px Arial";ctx.fillText((max/4*i).toFixed(1),5,y+3);
+        }
+
+        if(!data.length){
+            ctx.fillStyle=document.body.classList.contains("retroTerminal")?"#76a989":"#716565";
+            ctx.font="12px Arial";ctx.textAlign="center";
+            ctx.fillText("COMPLETE A CPS TEST TO BUILD YOUR PERFORMANCE GRAPH",width/2,height/2);
+            ctx.textAlign="left";return;
+        }
+
+        const pts=data.map((score,i)=>({
+            x:data.length===1?width/2:pad.left+(i/(data.length-1))*gw,
+            y:pad.top+gh-(score/max)*gh
+        }));
+
+        const accent=document.body.classList.contains("retroTerminal")?"#62ff9a":document.body.classList.contains("voidMatrix")?"#9da9ff":document.body.classList.contains("neonPulse")?"#00e5ff":"#ff2020";
+        ctx.strokeStyle=accent;ctx.lineWidth=3;ctx.shadowColor=accent;ctx.shadowBlur=10;
+        ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);for(let i=1;i<pts.length;i++)ctx.lineTo(pts[i].x,pts[i].y);ctx.stroke();ctx.shadowBlur=0;
+        pts.forEach(p=>{ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);ctx.fillStyle=accent;ctx.shadowColor=accent;ctx.shadowBlur=10;ctx.fill();ctx.shadowBlur=0;});
+    }
+
+    const oldShowHistory=window.showHistory;
+    if(typeof oldShowHistory==="function"){
+        window.showHistory=function(){
+            const result=oldShowHistory.apply(this,arguments);
+            setTimeout(()=>{pmEnsurePerformanceGraph();pmDrawPerformanceGraph();},30);
+            return result;
+        };
+    }
+
+    /* If another function opens the history page directly, MutationObserver
+       catches it without altering that existing navigation function. */
+    const observer=new MutationObserver(()=>{
+        const page=document.getElementById("historyPage");
+        if(page?.classList.contains("active")){pmEnsurePerformanceGraph();pmDrawPerformanceGraph();}
+    });
+    if(document.body)observer.observe(document.body,{subtree:true,attributes:true,attributeFilter:["class"]});
+    window.addEventListener("resize",()=>{if(document.getElementById("historyPage")?.classList.contains("active"))pmDrawPerformanceGraph();});
+
+    /* =========================================================
+       3) NEW FULL UI THEME — RETRO TERMINAL
+       Stored in the existing equippedUI field so the account's
+       selection persists and existing shop/redeem infrastructure
+       can recognize it as an owned cosmetic.
+    ========================================================= */
+    const RT_ID="ui_retro_terminal";
+    const RT_ITEM={id:RT_ID,name:"RETRO TERMINAL UI",price:2200,description:"A completely reworked terminal-style interface with a new palette, typography, panels and layouts.",type:"ui"};
+
+    function pmInstallRetroItem(){
+        if(typeof window.PM_SHOP_ITEMS!=="undefined")window.PM_SHOP_ITEMS[RT_ID]=RT_ITEM;
+        if(typeof window.PM_EXTRA_UI!=="undefined")window.PM_EXTRA_UI.retroTerminal=RT_ITEM;
+    }
+    pmInstallRetroItem();
+
+    function pmRetroOwned(){return !!(window.pmUserData?.ownedCosmetics||[]).includes(RT_ID);}
+    function pmRetroEquipped(){return window.pmUserData?.equippedUI===RT_ID;}
+
+    function pmApplyRetroUI(){
+        document.body.classList.remove("retroTerminal");
+        if(pmRetroEquipped()){
+            document.body.classList.remove("neonPulse","voidMatrix");
+            document.body.classList.add("retroTerminal");
+        }
+    }
+
+    /* Extend the existing theme application function instead of replacing
+       its original behavior for Default / Neon / Void Matrix. */
+    const oldApplyEquippedUI=window.pmApplyEquippedUI;
+    if(typeof oldApplyEquippedUI==="function"){
+        window.pmApplyEquippedUI=function(){
+            oldApplyEquippedUI.apply(this,arguments);
+            pmApplyRetroUI();
+        };
+    }
+
+    const oldEquipUI=window.pmEquipUI;
+    window.pmEquipUI=async function(id){
+        if(id!==RT_ID)return oldEquipUI.apply(this,arguments);
+        if(!window.pmFirebaseReady||!window.pmAuthUser||!window.pmUserData)return alert("Your online account is not connected yet.");
+        if(!pmRetroOwned())return alert("Buy the Retro Terminal UI from the Shop first.");
+        const next=pmRetroEquipped()?"default":RT_ID;
+        try{
+            window.pmUserData.equippedUI=next;
+            pmApplyRetroUI();
+            await firebase.firestore().collection("users").doc(pmAuthUser.uid).set({equippedUI:next,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+            await pmLoadOwnProfile();
+            pmApplyRetroUI();
+            if(typeof pmRenderCollection==="function")pmRenderCollection();
+        }catch(err){
+            console.error(err);
+            try{await pmLoadOwnProfile();pmApplyRetroUI();}catch(_){ }
+            alert("Could not change your UI.");
+        }
+    };
+
+    /* Add the new theme to My UI while preserving the existing collection. */
+    const oldRenderCollection=window.pmRenderCollection;
+    if(typeof oldRenderCollection==="function"){
+        window.pmRenderCollection=function(){
+            oldRenderCollection.apply(this,arguments);
+            const box=document.getElementById("pmMyUIList");
+            if(!box||box.querySelector("[data-retro-terminal-ui]"))return;
+            const card=document.createElement("div");
+            card.className="pmCollectionItem"+(pmRetroEquipped()?" equipped":"");
+            card.dataset.retroTerminalUi="1";
+            card.innerHTML=`
+                <div class="pmCollectionPreview" style="background:#07100b;color:#62ff9a;border:1px solid #28583a;font-family:'Courier New',monospace;letter-spacing:2px;">RETRO<br>TERMINAL</div>
+                <div class="pmCollectionItemTitle">RETRO TERMINAL</div>
+                <div class="pmCollectionItemSub">FULL REWORKED UI • SHOP ITEM • 2200 COINS</div>
+                <button class="pmActionButton ${pmRetroEquipped()?"pmSecondaryButton":""}">${pmRetroEquipped()?"UNEQUIP":pmRetroOwned()?"EQUIP":"NOT OWNED"}</button>
+                <div class="pmCollectionStatus ${pmRetroEquipped()?"equippedText":""}">${pmRetroEquipped()?"EQUIPPED":pmRetroOwned()?"AVAILABLE":"LOCKED"}</div>
+            `;
+            const button=card.querySelector("button");
+            button.disabled=!pmRetroOwned();
+            button.onclick=()=>window.pmEquipUI(RT_ID);
+            box.appendChild(card);
+        };
+    }
+
+    /* Add the new UI to the existing Shop grid. */
+    function pmEnsureRetroShopCard(){
+        const grid=document.querySelector("#shopPage .pmShopGrid");
+        if(!grid||grid.querySelector("[data-retro-terminal-shop]"))return;
+        const card=document.createElement("div");
+        card.className="pmShopCard";card.dataset.retroTerminalShop="1";
+        card.innerHTML=`
+            <div class="pmShopPreview" style="background:#07100b;">
+                <div style="width:82%;height:82%;border:1px solid #28583a;background:repeating-linear-gradient(0deg,rgba(98,255,154,.05) 0,rgba(98,255,154,.05) 1px,transparent 1px,transparent 5px);display:flex;align-items:center;justify-content:center;text-align:center;color:#62ff9a;font:900 24px 'Courier New',monospace;letter-spacing:3px;line-height:1.4;">RETRO<br>TERMINAL</div>
+            </div>
+            <div class="pmShopName">RETRO TERMINAL UI</div>
+            <div class="pmShopMeta"><span>FULL UI REWORK</span><span class="pmShopPrice">🪙 2200</span></div>
+            <div class="pmShopDescription">Changes the interface itself: colors, fonts, panels, spacing, controls and page layouts. This is a complete visual theme, not just a color filter.</div>
+            <div class="pmShopActions"><button class="pmActionButton" id="pmRetroBuyButton">BUY • 2200 🪙</button><button class="pmActionButton pmSecondaryButton" id="pmRetroEquipButton" style="display:none;">EQUIP</button></div>
+            <div class="pmShopOwnedNote" id="pmRetroOwnedNote"></div>
+        `;
+        grid.appendChild(card);
+        card.querySelector("#pmRetroBuyButton").onclick=()=>openShopCheckout(RT_ID);
+        card.querySelector("#pmRetroEquipButton").onclick=()=>window.pmEquipUI(RT_ID);
+        pmRenderRetroShopCard();
+    }
+
+    function pmRenderRetroShopCard(){
+        const buy=document.getElementById("pmRetroBuyButton"),equip=document.getElementById("pmRetroEquipButton"),note=document.getElementById("pmRetroOwnedNote");
+        if(!buy)return;
+        const owned=pmRetroOwned(),equipped=pmRetroEquipped();
+        buy.disabled=false;buy.textContent=owned?"GIFT CODE • 2200 🪙":"BUY • 2200 🪙";
+        equip.style.display=owned?"inline-block":"none";equip.textContent=equipped?"UNEQUIP":"EQUIP";
+        note.textContent=owned?(equipped?"Retro Terminal UI is equipped.":"You own this UI."):"";
+    }
+
+    /* Ensure the item exists before the original checkout/purchase functions
+       are called. */
+    const oldOpenShop=window.openShop;
+    if(typeof oldOpenShop==="function"){
+        window.openShop=function(){
+            const result=oldOpenShop.apply(this,arguments);
+            setTimeout(()=>{pmInstallRetroItem();pmEnsureRetroShopCard();pmRenderRetroShopCard();if(typeof pmRenderCollection==="function")pmRenderCollection();},30);
+            return result;
+        };
+    }
+
+    const oldRenderOwnProfile=window.renderOwnProfile;
+    if(typeof oldRenderOwnProfile==="function"){
+        window.renderOwnProfile=function(){
+            const result=oldRenderOwnProfile.apply(this,arguments);
+            pmInstallRetroItem();pmApplyRetroUI();pmRenderRetroShopCard();
+            return result;
+        };
+    }
+
+    /* Make the new UI selectable through the same global selectUI entry point. */
+    const oldSelectUI=window.selectUI;
+    window.selectUI=function(type){
+        if(type==="retro")return window.pmEquipUI(RT_ID);
+        return oldSelectUI.apply(this,arguments);
+    };
+
+    /* Patch collection after the existing code's later wrappers have run. */
+    setTimeout(()=>{pmInstallRetroItem();pmApplyRetroUI();pmEnsureRetroShopCard();pmRenderRetroShopCard();if(typeof pmRenderCollection==="function")pmRenderCollection();},500);
+})();
+</script>
 </body>
 </html>
